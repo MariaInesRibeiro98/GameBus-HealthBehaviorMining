@@ -1,1 +1,48 @@
-\secret
+# Ignore secret data
+/secret/
+
+# Ignore data files
+/data/
+
+# Keep config structure but ignore contents
+/config/*.csv
+/config/*.json
+/config/*.yaml
+/config/*.yml
+/config/*.ini
+/config/*.env
+
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Logs
+logs/
+*.log
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo

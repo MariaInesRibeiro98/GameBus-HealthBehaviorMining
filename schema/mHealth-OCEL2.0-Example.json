@@ -1,0 +1,348 @@
+{
+    "sensorTypes": [
+        {
+            "name": "accelerometer",
+            "attributes": [
+                { "name": "x_axis", "type": "float" },
+                { "name": "y_axis", "type": "float" },
+                { "name": "z_axis", "type": "float" }
+            ]
+        },
+        {
+            "name": "heartrate",
+            "attributes": [
+                { "name": "bpm", "type": "integer" }
+            ]
+        },
+        {
+            "name": "gps",
+            "attributes": [
+                { "name": "latitude", "type": "float" },
+                { "name": "longitude", "type": "float" },
+                { "name": "altitude", "type": "float" },
+                { "name": "speed", "type": "float" },
+                { "name": "error", "type": "float" }
+            ]
+        }
+    ],
+    "eventTypes": [
+        {
+            "name": "walking",
+            "attributes": [
+                { "name": "distance", "type": "integer" },
+                { "name": "pace", "type": "integer" },
+                { "name": "MET", "type": "float" }
+            ]
+        },
+        {
+            "name": "running",
+            "attributes": [
+                { "name": "distance", "type": "float" },
+                { "name": "pace", "type": "float" },
+                { "name": "MET", "type": "float" }
+            ]
+        },
+        {
+            "name": "sedentary",
+            "attributes": [
+                { "name": "MET", "type": "string" }
+            ]
+        },
+        {
+            "name": "nudge",
+            "attributes": [
+                { "name": "message", "type": "string" },
+                { "name": "trigger_reason", "type": "string" },
+                { "name": "nudge_type", "type": "string" }
+            ]
+        }
+    ],
+    "objectTypes": [
+        {
+            "name": "user",
+            "attributes": [
+                { "name": "name", "type": "string" },
+                { "name": "age", "type": "integer" },
+                { "name": "gender", "type": "string" },
+                { "name": "weight", "type": "float" },
+                { "name": "height", "type": "float" },
+                { "name": "fitness_goal", "type": "string" }
+            ]
+        },
+        {
+            "name": "device",
+            "attributes": [
+                { "name": "model", "type": "string" },
+                { "name": "os_version", "type": "string" },
+                { "name": "battery_level", "type": "float" }
+            ]
+        },
+        {
+            "name": "time_period",
+            "attributes": [
+                { "name": "period_type", "type": "string" },
+                { "name": "description", "type": "string" }
+            ]
+        },
+        {
+            "name": "weather",
+            "attributes": [
+                { "name": "temperature", "type": "float" },
+                { "name": "humidity", "type": "float" },
+                { "name": "conditions", "type": "string" }
+            ]
+        },
+        {
+            "name": "health_metric",
+            "attributes": [
+                { "name": "metric_name", "type": "string" },
+                { "name": "daily_target", "type": "float" },
+                { "name": "current_value", "type": "float" }
+            ]
+        }
+    ],
+    "sensorReadings": [
+        {
+            "id": "acc_reading_1",
+            "sensorType": "accelerometer",
+            "time": "2023-10-15T09:15:30.120Z",
+            "attributes": [
+                { "name": "x_axis", "value": "0.12" },
+                { "name": "y_axis", "value": "0.85" },
+                { "name": "z_axis", "value": "9.68" }
+            ],
+            "relationships": [
+                { "objectId": "user_1", "qualifier": "measured_for" },
+                { "objectId": "device_1", "qualifier": "measured_by" }
+            ]
+        },
+        {
+            "id": "acc_reading_2",
+            "sensorType": "accelerometer",
+            "time": "2023-10-15T09:15:30.140Z",
+            "attributes": [
+                { "name": "x_axis", "value": "0.28" },
+                { "name": "y_axis", "value": "0.91" },
+                { "name": "z_axis", "value": "9.71" }
+            ],
+            "relationships": [
+                { "objectId": "user_1", "qualifier": "measured_for" },
+                { "objectId": "device_1", "qualifier": "measured_by" }
+            ]
+        },
+        {
+            "id": "hr_reading_1",
+            "sensorType": "heartrate",
+            "time": "2023-10-15T09:15:30.000Z",
+            "attributes": [
+                { "name": "bpm", "value": "72" }
+            ],
+            "relationships": [
+                { "objectId": "user_1", "qualifier": "measured_for" },
+                { "objectId": "device_1", "qualifier": "measured_by" }
+            ]
+        },
+        {
+            "id": "gps_reading_1",
+            "sensorType": "gps",
+            "time": "2023-10-15T09:15:30.000Z",
+            "attributes": [
+                { "name": "latitude", "value": "52.3412" },
+                { "name": "longitude", "value": "4.8826" },
+                { "name": "altitude", "value": "10.2" },
+                { "name": "speed", "value": "1.2" },
+                { "name": "error", "value": "3.5" }
+            ],
+            "relationships": [
+                { "objectId": "user_1", "qualifier": "measured_for" },
+                { "objectId": "device_1", "qualifier": "measured_by" }
+            ]
+        },
+        {
+            "id": "acc_reading_3",
+            "sensorType": "accelerometer",
+            "time": "2023-10-15T14:30:15.100Z",
+            "attributes": [
+                { "name": "x_axis", "value": "1.52" },
+                { "name": "y_axis", "value": "2.34" },
+                { "name": "z_axis", "value": "8.91" }
+            ],
+            "relationships": [
+                { "objectId": "user_1", "qualifier": "measured_for" },
+                { "objectId": "device_1", "qualifier": "measured_by" }
+            ]
+        },
+        {
+            "id": "hr_reading_2",
+            "sensorType": "heartrate",
+            "time": "2023-10-15T14:30:15.000Z",
+            "attributes": [
+                { "name": "bpm", "value": "135" }
+            ],
+            "relationships": [
+                { "objectId": "user_1", "qualifier": "measured_for" },
+                { "objectId": "device_1", "qualifier": "measured_by" }
+            ]
+        }
+    ],
+    "events": [
+        {
+            "id": "walking_event_1",
+            "startTime": "2023-10-15T09:15:00.000Z",
+            "endTime": "2023-10-15T09:35:00.000Z",
+            "eventTypeClassifications": [
+                {
+                    "eventType": "walking",
+                    "probability": 0.92,
+                    "attributes": [
+                        { "name": "distance", "value": "450" },
+                        { "name": "pace", "value": "18" },
+                        { "name": "MET", "value": "3.8" }
+                    ]
+                },
+                {
+                    "eventType": "running",
+                    "probability": 0.07,
+                    "attributes": [
+                        { "name": "distance", "value": "450.0" },
+                        { "name": "pace", "value": "18.0" },
+                        { "name": "MET", "value": "7.2" }
+                    ]
+                }
+            ],
+            "relationships": [
+                { "objectId": "user_1", "qualifier": "performed_by" },
+                { "objectId": "day_period_1", "qualifier": "occurred_during" },
+                { "objectId": "active_minutes", "qualifier": "contributes_to" },
+                { "objectId": "weather_1", "qualifier": "influenced_by" }
+            ]
+        },
+        {
+            "id": "running_event_1",
+            "startTime": "2023-10-15T14:30:00.000Z",
+            "endTime": "2023-10-15T15:00:00.000Z",
+            "eventTypeClassifications": [
+                {
+                    "eventType": "running",
+                    "probability": 0.95,
+                    "attributes": [
+                        { "name": "distance", "value": "5200.0" },
+                        { "name": "pace", "value": "6.2" },
+                        { "name": "MET", "value": "9.8" }
+                    ]
+                },
+                {
+                    "eventType": "walking",
+                    "probability": 0.04,
+                    "attributes": [
+                        { "name": "distance", "value": "5200" },
+                        { "name": "pace", "value": "6" },
+                        { "name": "MET", "value": "5.5" }
+                    ]
+                }
+            ],
+            "relationships": [
+                { "objectId": "user_1", "qualifier": "performed_by" },
+                { "objectId": "day_period_1", "qualifier": "occurred_during" },
+                { "objectId": "active_minutes", "qualifier": "contributes_to" },
+                { "objectId": "weather_1", "qualifier": "influenced_by" }
+            ]
+        },
+        {
+            "id": "sedentary_event_1",
+            "startTime": "2023-10-15T10:00:00.000Z",
+            "endTime": "2023-10-15T12:00:00.000Z",
+            "eventTypeClassifications": [
+                {
+                    "eventType": "sedentary",
+                    "probability": 0.98,
+                    "attributes": [
+                        { "name": "MET", "value": "1.2" }
+                    ]
+                }
+            ],
+            "relationships": [
+                { "objectId": "user_1", "qualifier": "performed_by" },
+                { "objectId": "day_period_1", "qualifier": "occurred_during" }
+            ]
+        },
+        {
+            "id": "nudge_event_1",
+            "startTime": "2023-10-15T12:00:00.000Z",
+            "endTime": "2023-10-15T12:00:30.000Z",
+            "eventTypeClassifications": [
+                {
+                    "eventType": "nudge",
+                    "probability": 1.0,
+                    "attributes": [
+                        { "name": "message", "value": "You've been sitting for 2 hours. Time for a quick walk!" },
+                        { "name": "trigger_reason", "value": "prolonged_sedentary" },
+                        { "name": "nudge_type", "value": "notification" }
+                    ]
+                }
+            ],
+            "relationships": [
+                { "objectId": "user_1", "qualifier": "targeted_at" },
+                { "objectId": "sedentary_event_1", "qualifier": "triggered_by" },
+                { "objectId": "day_period_1", "qualifier": "occurred_during" }
+            ]
+        }
+    ],
+    "objects": [
+        {
+            "id": "user_1",
+            "type": "user",
+            "attributes": [
+                { "name": "name", "value": "Jane Smith", "time": "2023-10-15T00:00:00.000Z" },
+                { "name": "age", "value": "34", "time": "2023-10-15T00:00:00.000Z" },
+                { "name": "gender", "value": "female", "time": "2023-10-15T00:00:00.000Z" },
+                { "name": "weight", "value": "65.5", "time": "2023-10-15T00:00:00.000Z" },
+                { "name": "height", "value": "172", "time": "2023-10-15T00:00:00.000Z" },
+                { "name": "fitness_goal", "value": "weight_management", "time": "2023-10-15T00:00:00.000Z" }
+            ],
+            "relationships": [
+                { "objectId": "device_1", "qualifier": "owns" }
+            ]
+        },
+        {
+            "id": "device_1",
+            "type": "device",
+            "attributes": [
+                { "name": "model", "value": "Fitbit Sense", "time": "2023-10-15T00:00:00.000Z" },
+                { "name": "os_version", "value": "5.3.2", "time": "2023-10-15T09:00:00.000Z" },
+                { "name": "battery_level", "value": "85", "time": "2023-10-15T09:00:00.000Z" },
+                { "name": "battery_level", "value": "70", "time": "2023-10-15T15:00:00.000Z" }
+            ]
+        },
+        {
+            "id": "day_period_1",
+            "type": "time_period",
+            "attributes": [
+                { "name": "period_type", "value": "day", "time": "2023-10-15T00:00:00.000Z" },
+                { "name": "description", "value": "Tuesday, October 15, 2023", "time": "2023-10-15T00:00:00.000Z" }
+            ]
+        },
+        {
+            "id": "weather_1",
+            "type": "weather",
+            "attributes": [
+                { "name": "temperature", "value": "18.5", "time": "2023-10-15T09:00:00.000Z" },
+                { "name": "humidity", "value": "65", "time": "2023-10-15T09:00:00.000Z" },
+                { "name": "conditions", "value": "partly_cloudy", "time": "2023-10-15T09:00:00.000Z" },
+                { "name": "temperature", "value": "22.3", "time": "2023-10-15T14:00:00.000Z" },
+                { "name": "humidity", "value": "60", "time": "2023-10-15T14:00:00.000Z" },
+                { "name": "conditions", "value": "sunny", "time": "2023-10-15T14:00:00.000Z" }
+            ]
+        },
+        {
+            "id": "active_minutes",
+            "type": "health_metric",
+            "attributes": [
+                { "name": "metric_name", "value": "active_minutes", "time": "2023-10-15T00:00:00.000Z" },
+                { "name": "daily_target", "value": "60", "time": "2023-10-15T00:00:00.000Z" },
+                { "name": "current_value", "value": "20", "time": "2023-10-15T09:35:00.000Z" },
+                { "name": "current_value", "value": "50", "time": "2023-10-15T15:00:00.000Z" }
+            ]
+        }
+    ]
+} 
