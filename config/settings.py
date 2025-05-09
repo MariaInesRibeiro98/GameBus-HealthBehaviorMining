@@ -5,7 +5,9 @@ General settings for the GameBus-HealthBehaviorMining project.
 # GameBus API configuration
 DEFAULT_PAGE_SIZE = 50
 MAX_RETRIES = 3
-REQUEST_TIMEOUT = 30  # seconds
+REQUEST_TIMEOUT = 60  # seconds - increased for larger data requests
+CONNECT_TIMEOUT = 10  # seconds - separate timeout for connection establishment
+RETRY_DELAY = 5  # seconds - delay between retries
 
 # Data collection settings
 VALID_GAME_DESCRIPTORS = [
