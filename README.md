@@ -13,7 +13,8 @@ GameBus-HealthBehaviorMining/
 ├── src/                            # Source code
 │   ├── extraction/                 # Data extraction from GameBus
 │   │   ├── gamebus_client.py       # GameBus API client
-│   │   └── data_collectors.py      # Data collectors for different data types
+│   │   ├── data_collectors.py      # Data collectors for different data types
+│   │   └── README.md              # Detailed extraction documentation
 │   ├── preprocessing/              # Data preprocessing and cleaning (TBD)
 │   ├── activity_recognition/       # Human activity recognition (TBD)
 │   ├── ocel_generation/            # OCEL format generation (TBD)
@@ -36,7 +37,15 @@ GameBus-HealthBehaviorMining/
 
 ## Framework Workflow
 
-1. **Data Extraction**: Extract raw data from the GameBus API, including GPS location, activity type, heart rate, accelerometer, mood, and notification data.
+1. **Data Extraction**: Extract raw data from the GameBus API, including:
+   - GPS location data (latitude, longitude, altitude, speed)
+   - Activity type data (walking, running, etc.)
+   - Heart rate monitoring
+   - Accelerometer readings
+   - Mood logging
+   - Notification data
+   
+   The extraction supports date-based filtering to retrieve data within specific time ranges.
 
 2. **Preprocessing** (To be implemented): Clean and normalize the raw data, handle missing values, synchronize timestamps, etc.
 
@@ -94,11 +103,26 @@ For detailed instructions, see `config/README.md`.
 
 #### Using the Pipeline
 
-Run the data extraction pipeline:
+The pipeline supports various options for data extraction:
 
-```
+```bash
+# Extract all data types
+python pipeline.py --extract-only
+
+# Extract specific data types
 python pipeline.py --extract-only --data-types location mood activity heartrate
+
+# Extract data for a specific user
+python pipeline.py --extract-only --user-id 123
+
+# Extract data within a date range
+python pipeline.py --extract-only --start-date 2024-01-01 --end-date 2024-02-01
+
+# Combine options
+python pipeline.py --extract-only --data-types location mood --start-date 2024-01-01 --user-id 123
 ```
+
+For more detailed information about the extraction functionality, see `src/extraction/README.md`.
 
 #### Using Notebooks
 
@@ -107,6 +131,42 @@ Open and run the Jupyter notebooks in the `notebooks/` directory:
 ```
 jupyter notebook notebooks/01_data_extraction.ipynb
 ```
+
+## Data Types
+
+The framework extracts the following types of data from GameBus:
+
+1. **Location Data**
+   - GPS coordinates (latitude, longitude)
+   - Altitude
+   - Speed
+   - Error margin
+   - Timestamps
+
+2. **Mood Data**
+   - Valence (pleasure-displeasure)
+   - Arousal (activation-deactivation)
+   - Stress state
+   - Event timestamps
+
+3. **Activity Type Data**
+   - Activity classification (walking, running, etc.)
+   - Speed
+   - Steps count
+   - Distance
+   - Calories burned
+
+4. **Heart Rate Data**
+   - Heart rate values
+   - Timestamps
+
+5. **Accelerometer Data**
+   - X, Y, Z axis measurements
+   - Timestamps
+
+6. **Notification Data**
+   - Notification actions
+   - Timestamps
 
 ## OCEL Format
 

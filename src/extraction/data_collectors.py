@@ -7,6 +7,7 @@ import pandas as pd
 import logging
 import os
 from typing import Dict, List, Optional, Any, Union, Tuple
+from datetime import datetime
 
 from config.settings import VALID_GAME_DESCRIPTORS, VALID_PROPERTY_KEYS
 from config.paths import RAW_DATA_DIR
@@ -159,20 +160,40 @@ class DataCollector:
         
         return data_list
 
+    def collect(self, start_date: Optional[datetime] = None, 
+                end_date: Optional[datetime] = None) -> Tuple[List[Dict[str, Any]], str]:
+        """
+        Collect data from GameBus.
+        
+        Args:
+            start_date: Optional start date for filtering data
+            end_date: Optional end date for filtering data
+            
+        Returns:
+            Tuple of (parsed data, file path)
+        """
+        raise NotImplementedError("Subclasses must implement collect()")
+
 
 class LocationDataCollector(DataCollector):
     """
     Collector for GPS location data.
     """
     
-    def collect(self) -> Tuple[List[Dict[str, Any]], str]:
+    def collect(self, start_date: Optional[datetime] = None, 
+                end_date: Optional[datetime] = None) -> Tuple[List[Dict[str, Any]], str]:
         """
         Collect GPS location data.
         
+        Args:
+            start_date: Optional start date for filtering data
+            end_date: Optional end date for filtering data
+            
         Returns:
             Tuple of (parsed data, file path)
         """
-        raw_data = self.client.get_player_data(self.token, self.player_id, "GEOFENCE")
+        raw_data = self.client.get_player_data(self.token, self.player_id, "GEOFENCE",
+                                             start_date=start_date, end_date=end_date)
         parsed_data = self._parse_general_data(raw_data)
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_location.json")
         return parsed_data, file_path
@@ -183,14 +204,20 @@ class MoodDataCollector(DataCollector):
     Collector for mood logging data.
     """
     
-    def collect(self) -> Tuple[List[Dict[str, Any]], str]:
+    def collect(self, start_date: Optional[datetime] = None, 
+                end_date: Optional[datetime] = None) -> Tuple[List[Dict[str, Any]], str]:
         """
         Collect mood logging data.
         
+        Args:
+            start_date: Optional start date for filtering data
+            end_date: Optional end date for filtering data
+            
         Returns:
             Tuple of (parsed data, file path)
         """
-        raw_data = self.client.get_player_data(self.token, self.player_id, "LOG_MOOD")
+        raw_data = self.client.get_player_data(self.token, self.player_id, "LOG_MOOD",
+                                             start_date=start_date, end_date=end_date)
         parsed_data = self._parse_general_data(raw_data)
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_mood.json")
         return parsed_data, file_path
@@ -201,14 +228,20 @@ class ActivityTypeDataCollector(DataCollector):
     Collector for activity type data.
     """
     
-    def collect(self) -> Tuple[List[Dict[str, Any]], str]:
+    def collect(self, start_date: Optional[datetime] = None, 
+                end_date: Optional[datetime] = None) -> Tuple[List[Dict[str, Any]], str]:
         """
         Collect activity type data.
         
+        Args:
+            start_date: Optional start date for filtering data
+            end_date: Optional end date for filtering data
+            
         Returns:
             Tuple of (parsed data, file path)
         """
-        raw_data = self.client.get_player_data(self.token, self.player_id, "TIZEN(DETAIL)")
+        raw_data = self.client.get_player_data(self.token, self.player_id, "TIZEN(DETAIL)",
+                                             start_date=start_date, end_date=end_date)
         parsed_data = self._parse_tizen_data(raw_data, "ACTIVITY_TYPE")
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_activity_type.json")
         return parsed_data, file_path
@@ -219,14 +252,20 @@ class HeartRateDataCollector(DataCollector):
     Collector for heart rate data.
     """
     
-    def collect(self) -> Tuple[List[Dict[str, Any]], str]:
+    def collect(self, start_date: Optional[datetime] = None, 
+                end_date: Optional[datetime] = None) -> Tuple[List[Dict[str, Any]], str]:
         """
         Collect heart rate data.
         
+        Args:
+            start_date: Optional start date for filtering data
+            end_date: Optional end date for filtering data
+            
         Returns:
             Tuple of (parsed data, file path)
         """
-        raw_data = self.client.get_player_data(self.token, self.player_id, "TIZEN(DETAIL)")
+        raw_data = self.client.get_player_data(self.token, self.player_id, "TIZEN(DETAIL)",
+                                             start_date=start_date, end_date=end_date)
         parsed_data = self._parse_tizen_data(raw_data, "HRM_LOG")
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_heartrate.json")
         return parsed_data, file_path
@@ -237,14 +276,20 @@ class AccelerometerDataCollector(DataCollector):
     Collector for accelerometer data.
     """
     
-    def collect(self) -> Tuple[List[Dict[str, Any]], str]:
+    def collect(self, start_date: Optional[datetime] = None, 
+                end_date: Optional[datetime] = None) -> Tuple[List[Dict[str, Any]], str]:
         """
         Collect accelerometer data.
         
+        Args:
+            start_date: Optional start date for filtering data
+            end_date: Optional end date for filtering data
+            
         Returns:
             Tuple of (parsed data, file path)
         """
-        raw_data = self.client.get_player_data(self.token, self.player_id, "TIZEN(DETAIL)")
+        raw_data = self.client.get_player_data(self.token, self.player_id, "TIZEN(DETAIL)",
+                                             start_date=start_date, end_date=end_date)
         parsed_data = self._parse_tizen_data(raw_data, "ACCELEROMETER_LOG")
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_accelerometer.json")
         return parsed_data, file_path
@@ -255,14 +300,20 @@ class NotificationDataCollector(DataCollector):
     Collector for notification data.
     """
     
-    def collect(self) -> Tuple[List[Dict[str, Any]], str]:
+    def collect(self, start_date: Optional[datetime] = None, 
+                end_date: Optional[datetime] = None) -> Tuple[List[Dict[str, Any]], str]:
         """
         Collect notification data.
         
+        Args:
+            start_date: Optional start date for filtering data
+            end_date: Optional end date for filtering data
+            
         Returns:
             Tuple of (parsed data, file path)
         """
-        raw_data = self.client.get_player_data(self.token, self.player_id, "NOTIFICATION(DETAIL)")
+        raw_data = self.client.get_player_data(self.token, self.player_id, "NOTIFICATION(DETAIL)",
+                                             start_date=start_date, end_date=end_date)
         parsed_data = self._parse_general_data(raw_data)
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_notifications.json")
         return parsed_data, file_path 

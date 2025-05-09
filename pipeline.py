@@ -4,7 +4,8 @@ Main pipeline runner for the GameBus-HealthBehaviorMining project.
 import argparse
 import pandas as pd
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from datetime import datetime
 
 from config.credentials import AUTHCODE
 from config.paths import USERS_FILE_PATH
@@ -33,8 +34,27 @@ def parse_args():
     parser.add_argument('--log-level', default='INFO',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Logging level')
+    parser.add_argument('--start-date', type=str,
+                        help='Start date for data extraction (format: YYYY-MM-DD)')
+    parser.add_argument('--end-date', type=str,
+                        help='End date for data extraction (format: YYYY-MM-DD)')
     
     return parser.parse_args()
+
+def parse_date(date_str: str) -> datetime:
+    """
+    Parse a date string into a datetime object.
+    
+    Args:
+        date_str: Date string in YYYY-MM-DD format
+        
+    Returns:
+        Datetime object
+    """
+    try:
+        return datetime.strptime(date_str, '%Y-%m-%d')
+    except ValueError as e:
+        raise ValueError(f"Invalid date format. Please use YYYY-MM-DD format: {e}")
 
 def load_users(users_file: str) -> pd.DataFrame:
     """
@@ -53,13 +73,17 @@ def load_users(users_file: str) -> pd.DataFrame:
         logging.error(f"Failed to load users file: {e}")
         raise
 
-def run_extraction(user_row: pd.Series, data_types: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+def run_extraction(user_row: pd.Series, data_types: List[str], 
+                  start_date: Optional[datetime] = None,
+                  end_date: Optional[datetime] = None) -> Dict[str, List[Dict[str, Any]]]:
     """
     Run the extraction step for a single user.
     
     Args:
         user_row: User data row from DataFrame
         data_types: Types of data to collect
+        start_date: Optional start date for filtering data
+        end_date: Optional end date for filtering data
         
     Returns:
         Dictionary of collected data by type
@@ -104,7 +128,7 @@ def run_extraction(user_row: pd.Series, data_types: List[str]) -> Dict[str, List
         if data_type in collectors:
             logger.info(f"Collecting {data_type} data for user {username}")
             try:
-                data, file_path = collectors[data_type].collect()
+                data, file_path = collectors[data_type].collect(start_date=start_date, end_date=end_date)
                 results[data_type] = data
                 logger.info(f"Collected {len(data)} {data_type} data points, saved to {file_path}")
             except Exception as e:
@@ -120,6 +144,14 @@ def main():
     logger = setup_logging(log_level=args.log_level)
     logger.info("Starting GameBus Health Behavior Mining Pipeline")
     
+    # Parse dates if provided
+    start_date = parse_date(args.start_date) if args.start_date else None
+    end_date = parse_date(args.end_date) if args.end_date else None
+    
+    if start_date and end_date and start_date > end_date:
+        logger.error("Start date must be before end date")
+        return
+    
     # Load users
     users_df = load_users(USERS_FILE_PATH)
     logger.info(f"Loaded {len(users_df)} users")
@@ -127,11 +159,11 @@ def main():
     # Process specific user or all users
     if args.user_id:
         user_row = users_df[users_df['UserID'] == args.user_id].iloc[0]
-        results = run_extraction(user_row, args.data_types)
+        results = run_extraction(user_row, args.data_types, start_date, end_date)
     else:
         all_results = {}
         for _, user_row in users_df.iterrows():
-            user_results = run_extraction(user_row, args.data_types)
+            user_results = run_extraction(user_row, args.data_types, start_date, end_date)
             all_results[user_row['Username']] = user_results
     
     # Only run extraction if requested

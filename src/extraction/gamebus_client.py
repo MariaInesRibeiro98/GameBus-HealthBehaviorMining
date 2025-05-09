@@ -7,6 +7,7 @@ import time
 from typing import Dict, List, Optional, Any, Union
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from datetime import datetime
 
 from config.credentials import BASE_URL, TOKEN_URL, PLAYER_ID_URL, ACTIVITIES_URL
 from config.settings import (
@@ -66,6 +67,13 @@ class GameBusClient:
             # Set timeouts if not provided
             if 'timeout' not in kwargs:
                 kwargs['timeout'] = (CONNECT_TIMEOUT, REQUEST_TIMEOUT)
+            
+            # Log the full URL and parameters
+            if 'params' in kwargs:
+                full_url = f"{url}?{requests.compat.urlencode(kwargs['params'])}"
+                logger.debug(f"Making {method} request to: {full_url}")
+            else:
+                logger.debug(f"Making {method} request to: {url}")
             
             response = self.session.request(method, url, **kwargs)
             response.raise_for_status()
@@ -128,7 +136,8 @@ class GameBusClient:
         return None
     
     def get_player_data(self, token: str, player_id: int, game_descriptor: str, 
-                       page_size: int = 50) -> List[Dict[str, Any]]:
+                       page_size: int = 50, start_date: Optional[datetime] = None,
+                       end_date: Optional[datetime] = None) -> List[Dict[str, Any]]:
         """
         Get player data for a specific game descriptor.
         
@@ -137,6 +146,8 @@ class GameBusClient:
             player_id: Player ID
             game_descriptor: Type of data to retrieve (e.g., "GEOFENCE", "LOG_MOOD")
             page_size: Number of items per page
+            start_date: Optional start date for filtering data
+            end_date: Optional end date for filtering data
             
         Returns:
             List of player data points
@@ -146,18 +157,41 @@ class GameBusClient:
         
         headers = {"Authorization": f"Bearer {token}"}
         
-        # Construct URL based on game descriptor
+        # Start with base URL
+        base_url = f"{self.base_url}/players/{player_id}/activities"
+        
+        # Build query parameters
+        params = {
+            "sort": "-date",
+            "size": page_size
+        }
+        
+        # Add game descriptor filter
         if game_descriptor == "SELFREPORT":
-            data_url = (self.activities_url + "&excludedGds=").format(player_id)
+            params["excludedGds"] = ""
         else:
-            data_url = (self.activities_url + "&gds={}").format(player_id, game_descriptor)
+            params["gds"] = game_descriptor
+        
+        # Add date filtering parameters if provided
+        if start_date:
+            start_timestamp = int(start_date.timestamp() * 1000)
+            params["from"] = start_timestamp
+            logger.info(f"Filtering data from: {start_date} (timestamp: {start_timestamp})")
+        
+        if end_date:
+            end_timestamp = int(end_date.timestamp() * 1000)
+            params["to"] = end_timestamp
+            logger.info(f"Filtering data to: {end_date} (timestamp: {end_timestamp})")
         
         all_player_data = []
         page = 0
         
         while True:
-            paginated_url = f"{data_url}&page={page}&size={page_size}"
-            response = self._make_request("GET", paginated_url, headers=headers)
+            # Add page parameter
+            params["page"] = page
+            
+            # Make request with parameters
+            response = self._make_request("GET", base_url, headers=headers, params=params)
             
             if not response:
                 logger.error(f"Failed to retrieve data for page {page}")
@@ -166,6 +200,11 @@ class GameBusClient:
             player_data = response.json()
             if not player_data:
                 break
+            
+            # Log the first item's date for debugging
+            if player_data and len(player_data) > 0:
+                first_item_date = datetime.fromtimestamp(player_data[0].get('date', 0) / 1000)
+                logger.info(f"First item date on page {page}: {first_item_date}")
             
             all_player_data.extend(player_data)
             logger.info(f"Successfully retrieved page {page} with {len(player_data)} items")
