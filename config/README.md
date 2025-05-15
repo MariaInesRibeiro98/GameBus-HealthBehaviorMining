@@ -21,7 +21,7 @@ To set up your development environment:
 ```
 secret/
 ├── __init__.py
-├── auth.py          # Contains authcode variable
+├── auth.py          # Contains authcode and google_places_api_key variables
 ├── users.py         # Contains GB_users_path variable
 └── output.py        # Contains output_path variable
 ```
@@ -30,7 +30,11 @@ secret/
 
 `auth.py`:
 ```python
+# GameBus API authentication
 authcode = "your_gamebus_auth_code_here"
+
+# Google Places API key for location categorization
+google_places_api_key = "your_google_places_api_key_here"
 ```
 
 `users.py`:
@@ -56,6 +60,10 @@ output_path = "path/to/your/output/directory"
    - Users file will be expected at `config/users.csv`
    - Output will go to `data/raw/`
    - You'll need to provide your own auth code in `config/credentials.py`
+   - For Google Places API, you can either:
+     a. Set the `GOOGLE_PLACES_API_KEY` environment variable
+     b. Add the key directly in `config/credentials.py`
+     c. Create the secret folder with the key in `secret/auth.py`
 
 ## Git Behavior
 

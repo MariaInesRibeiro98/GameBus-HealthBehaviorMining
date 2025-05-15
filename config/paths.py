@@ -10,6 +10,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # Data directories
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 RAW_DATA_DIR = os.path.join(DATA_DIR, "raw")
+TRANSFORMED_DATA_DIR = os.path.join(DATA_DIR, "transformed")
 PREPROCESSED_DATA_DIR = os.path.join(DATA_DIR, "preprocessed")
 FEATURES_DATA_DIR = os.path.join(DATA_DIR, "features")
 ACTIVITIES_DATA_DIR = os.path.join(DATA_DIR, "activities")

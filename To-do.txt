@@ -1,0 +1,22 @@
+## To do
+
+# Extraction
+
+- [DONE] Extract from the Gamebus API single data points of a single user of all needed game descriptors
+- [DONE] Create well thought Gamebus API client to extract all needed data points of a single user
+- Improve code, document and create an example notebook. 
+- Extraction by date (within a campaign)
+- Extract only from most recent data point (more efficient) --- not MVP
+
+# Categorization
+
+- [DONE] Categorize a single location data point to Google Places API type. 
+- [DONE] Categorize all location location data points and add type to the raw location data (enrichment)
+- [DONE] Cache unique location point types with a given radius to reduce number of API calls (more efficient)
+- Improve code, document and create an example notebook. 
+- Create db for cached uniques --- not MVP
+
+
+# Transformation
+
+- Map GB data to OCED-mHealth meta model.
