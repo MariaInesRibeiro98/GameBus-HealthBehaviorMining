@@ -13,7 +13,7 @@
 - [DONE] Categorize a single location data point to Google Places API type. 
 - [DONE] Categorize all location location data points and add type to the raw location data (enrichment)
 - [DONE] Cache unique location point types with a given radius to reduce number of API calls (more efficient)
-- Improve code, document and create an example notebook. 
+- [DONE] Improve code, document and create an example notebook. 
 - Create db for cached uniques --- not MVP
 
 

@@ -7,7 +7,7 @@ A framework for extracting, processing, and analyzing health behavior data from 
 ```
 GameBus-HealthBehaviorMining/
 ├── config/                         # Configuration files
-│   ├── credentials.py              # GameBus API credentials
+│   ├── credentials.py              # GameBus and Google API credentials
 │   ├── paths.py                    # Path configurations
 │   └── settings.py                 # General settings
 ├── src/                            # Source code
@@ -15,6 +15,9 @@ GameBus-HealthBehaviorMining/
 │   │   ├── gamebus_client.py       # GameBus API client
 │   │   ├── data_collectors.py      # Data collectors for different data types
 │   │   └── README.md              # Detailed extraction documentation
+│   ├── categorization/             # Location data categorization
+│   │   ├── location_categorizer.py # Categorize locations using Google Places API
+│   │   └── README.md              # Categorization service documentation
 │   ├── preprocessing/              # Data preprocessing and cleaning (TBD)
 │   ├── activity_recognition/       # Human activity recognition (TBD)
 │   ├── ocel_generation/            # OCEL format generation (TBD)
@@ -28,6 +31,7 @@ GameBus-HealthBehaviorMining/
 │   └── mHealth-OCEL2.0.json        # mHealth extension of OCEL 2.0 schema
 ├── data/                           # Data directory
 │   ├── raw/                        # Raw extracted data
+│   ├── categorized/                # Categorized/enriched data (location types)
 │   ├── preprocessed/               # Cleaned and normalized data (future)
 │   ├── features/                   # Features for activity recognition (future)
 │   ├── activities/                 # Recognized activities (future)
@@ -47,11 +51,15 @@ GameBus-HealthBehaviorMining/
    
    The extraction supports date-based filtering to retrieve data within specific time ranges.
 
-2. **Preprocessing** (To be implemented): Clean and normalize the raw data, handle missing values, synchronize timestamps, etc.
+2. **Location Categorization**: Enrich raw location data by categorizing each point using the Google Places API. The categorization service (`src/categorization/location_categorizer.py`) adds a `location_type` field to each record and saves the result in `data/categorized/` as both CSV and JSON. **Missing values are represented as the string `'NaN'` in the output JSON.**
 
-3. **Activity Recognition** (To be implemented): Recognize human activities from the sensor data using machine learning techniques.
+   - The categorization module is modular: you can load, categorize, and save location data in separate steps, or use the legacy one-step method. See [`src/categorization/README.md`](src/categorization/README.md) for full documentation and examples.
 
-4. **OCEL Generation** (To be implemented): Transform the preprocessed data and recognized activities into the Object-Centric Event Log (OCEL) format for process mining.
+3. **Preprocessing** (To be implemented): Clean and normalize the raw and categorized data, handle missing values, synchronize timestamps, etc.
+
+4. **Activity Recognition** (To be implemented): Recognize human activities from the sensor data using machine learning techniques.
+
+5. **OCEL Generation** (To be implemented): Transform the preprocessed data and recognized activities into the Object-Centric Event Log (OCEL) format for process mining.
 
 ## Getting Started
 
@@ -122,7 +130,24 @@ python pipeline.py --extract-only --start-date 2024-01-01 --end-date 2024-02-01
 python pipeline.py --extract-only --data-types location mood --start-date 2024-01-01 --user-id 123
 ```
 
-For more detailed information about the extraction functionality, see `src/extraction/README.md`.
+After extraction, run the categorization service to enrich location data:
+
+```bash
+python src/categorization/location_categorizer.py --player-id 107631
+```
+
+Or, use the modular approach in your own scripts:
+
+```python
+from src.categorization.location_categorizer import LocationCategorizer
+
+categorizer = LocationCategorizer()
+df = categorizer.load_player_location_df(player_id)
+df_categorized = categorizer.categorize_location_df(df, player_id)
+categorizer.save_categorized_location_json(df_categorized, player_id)
+```
+
+For more detailed information about the extraction and categorization functionality, see `src/extraction/README.md` and `src/categorization/README.md`.
 
 #### Using Notebooks
 
@@ -134,7 +159,7 @@ jupyter notebook notebooks/01_data_extraction.ipynb
 
 ## Data Types
 
-The framework extracts the following types of data from GameBus:
+The framework extracts and processes the following types of data from GameBus:
 
 1. **Location Data**
    - GPS coordinates (latitude, longitude)
@@ -142,6 +167,8 @@ The framework extracts the following types of data from GameBus:
    - Speed
    - Error margin
    - Timestamps
+   - **Categorized location data**: Adds a `location_type` field (e.g., university, park, etc.)
+   - **Missing values in the output JSON are represented as the string `'NaN'`.**
 
 2. **Mood Data**
    - Valence (pleasure-displeasure)

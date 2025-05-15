@@ -2,6 +2,10 @@
 
 This module provides functionality to extract various types of data from the GameBus platform. It includes a client for interacting with the GameBus API and collectors for different types of data.
 
+## Pipeline Integration
+
+After extraction, location data can be enriched using the categorization service (`src/categorization/location_categorizer.py`), which adds semantic place types to each location point using the Google Places API. See the categorization README for details.
+
 ## Components
 
 ### GameBusClient
@@ -21,6 +25,7 @@ The module includes several specialized data collectors:
    - Collects GPS location data
    - Includes latitude, longitude, altitude, speed, and error information
    - Data type: `GEOFENCE`
+   - **Output:** Raw location data is saved in `data/raw/` and can be further processed by the categorization service.
 
 2. **MoodDataCollector**
    - Collects mood logging data

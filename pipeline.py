@@ -19,6 +19,7 @@ from src.extraction.data_collectors import (
     NotificationDataCollector
 )
 from src.utils.logging import setup_logging
+from src.categorization.location_categorizer import LocationCategorizer
 
 def parse_args():
     """Parse command line arguments."""
@@ -90,6 +91,7 @@ def run_extraction(user_row: pd.Series, data_types: List[str],
     """
     username = user_row['Username']
     password = user_row['Password']
+    player_id = user_row['UserID'] if 'UserID' in user_row else None
     
     logger = logging.getLogger(__name__)
     logger.info(f"Processing user: {username}")
@@ -103,7 +105,8 @@ def run_extraction(user_row: pd.Series, data_types: List[str],
         logger.error(f"Failed to get token for user {username}")
         return {}
     
-    player_id = client.get_player_id(token)
+    if player_id is None:
+        player_id = client.get_player_id(token)
     if not player_id:
         logger.error(f"Failed to get player ID for user {username}")
         return {}
@@ -134,6 +137,8 @@ def run_extraction(user_row: pd.Series, data_types: List[str],
             except Exception as e:
                 logger.error(f"Failed to collect {data_type} data for user {username}: {e}")
     
+    # Return player_id for downstream steps
+    results['player_id'] = player_id
     return results
 
 def main():
@@ -160,11 +165,23 @@ def main():
     if args.user_id:
         user_row = users_df[users_df['UserID'] == args.user_id].iloc[0]
         results = run_extraction(user_row, args.data_types, start_date, end_date)
+        player_id = results.get('player_id')
+        if not args.extract_only and player_id and ('location' in args.data_types or 'all' in args.data_types):
+            logger.info(f"Running location categorization for player {player_id}")
+            categorizer = LocationCategorizer()
+            df = categorizer.load_player_location_df(player_id)
+            categorizer.categorize_location_df(df, player_id)
     else:
         all_results = {}
         for _, user_row in users_df.iterrows():
             user_results = run_extraction(user_row, args.data_types, start_date, end_date)
             all_results[user_row['Username']] = user_results
+            player_id = user_results.get('player_id')
+            if not args.extract_only and player_id and ('location' in args.data_types or 'all' in args.data_types):
+                logger.info(f"Running location categorization for player {player_id}")
+                categorizer = LocationCategorizer()
+                df = categorizer.load_player_location_df(player_id)
+                categorizer.categorize_location_df(df, player_id)
     
     # Only run extraction if requested
     if args.extract_only:
