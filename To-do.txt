@@ -5,7 +5,7 @@
 - [DONE] Extract from the Gamebus API single data points of a single user of all needed game descriptors
 - [DONE] Create well thought Gamebus API client to extract all needed data points of a single user
 - Improve code, document and create an example notebook. 
-- Extraction by date (within a campaign)
+- [DONE] Extraction by date (within a campaign)
 - Extract only from most recent data point (more efficient) --- not MVP
 
 # Categorization

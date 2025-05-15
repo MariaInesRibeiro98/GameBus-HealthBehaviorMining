@@ -7,7 +7,7 @@ import pandas as pd
 import logging
 import os
 from typing import Dict, List, Optional, Any, Union, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 
 from config.settings import VALID_GAME_DESCRIPTORS, VALID_PROPERTY_KEYS
 from config.paths import RAW_DATA_DIR
@@ -160,6 +160,83 @@ class DataCollector:
         
         return data_list
 
+    def _filter_data_by_date(self, raw_data: List[Dict[str, Any]], start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> List[Dict[str, Any]]:
+        """
+        Filter raw data by date range, supporting multiple date field names and formats.
+
+        Args:
+            raw_data: List of raw data dictionaries, each containing a date field.
+            start_date: Optional start date (inclusive).
+            end_date: Optional end date (inclusive).
+
+        Returns:
+            Filtered list of data dictionaries.
+        """
+        date_fields = ["date", "ts", "TIMESTAMP", "EVENT_TIMESTAMP"]
+        if not start_date and not end_date:
+            return raw_data
+
+        # Ensure start_date and end_date are timezone-aware (UTC)
+        def make_aware_utc(dt):
+            if dt is None:
+                return None
+            if dt.tzinfo is None:
+                return dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc)
+
+        start_date_aware = make_aware_utc(start_date)
+        end_date_aware = make_aware_utc(end_date)
+
+        filtered_data = []
+        for data_point in raw_data:
+            date_value = None
+            for field in date_fields:
+                if field in data_point:
+                    date_value = data_point[field]
+                    break
+            if date_value is None:
+                continue
+            data_date = None
+            # Try to parse the date value
+            try:
+                if isinstance(date_value, (int, float)):
+                    # Heuristic: if value is too large, it's likely ms
+                    if date_value > 1e12:
+                        data_date = datetime.fromtimestamp(date_value / 1000.0, tz=timezone.utc)
+                    elif date_value > 1e9:
+                        data_date = datetime.fromtimestamp(date_value, tz=timezone.utc)
+                    else:
+                        # Unlikely, but fallback
+                        data_date = datetime.fromtimestamp(float(date_value), tz=timezone.utc)
+                elif isinstance(date_value, str):
+                    # Try to parse as ISO string
+                    try:
+                        data_date = datetime.fromisoformat(date_value.replace('Z', '+00:00'))
+                        if data_date.tzinfo is None:
+                            data_date = data_date.replace(tzinfo=timezone.utc)
+                        else:
+                            data_date = data_date.astimezone(timezone.utc)
+                    except Exception:
+                        # Try to parse as epoch string
+                        if date_value.isdigit():
+                            epoch_val = int(date_value)
+                            if epoch_val > 1e12:
+                                data_date = datetime.fromtimestamp(epoch_val / 1000.0, tz=timezone.utc)
+                            elif epoch_val > 1e9:
+                                data_date = datetime.fromtimestamp(epoch_val, tz=timezone.utc)
+                # If still not parsed, skip
+                if data_date is None:
+                    raise ValueError(f"Unrecognized date format: {date_value}")
+            except Exception as e:
+                logger.warning(f"Could not parse date '{date_value}': {e}")
+                continue
+            if start_date_aware and data_date < start_date_aware:
+                continue
+            if end_date_aware and data_date > end_date_aware:
+                continue
+            filtered_data.append(data_point)
+        return filtered_data
+
     def collect(self, start_date: Optional[datetime] = None, 
                 end_date: Optional[datetime] = None) -> Tuple[List[Dict[str, Any]], str]:
         """
@@ -195,6 +272,7 @@ class LocationDataCollector(DataCollector):
         raw_data = self.client.get_player_data(self.token, self.player_id, "GEOFENCE",
                                              start_date=start_date, end_date=end_date)
         parsed_data = self._parse_general_data(raw_data)
+        parsed_data = self._filter_data_by_date(parsed_data, start_date, end_date)
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_location.json")
         return parsed_data, file_path
 
@@ -219,6 +297,7 @@ class MoodDataCollector(DataCollector):
         raw_data = self.client.get_player_data(self.token, self.player_id, "LOG_MOOD",
                                              start_date=start_date, end_date=end_date)
         parsed_data = self._parse_general_data(raw_data)
+        #parsed_data = self._filter_data_by_date(parsed_data, start_date, end_date)
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_mood.json")
         return parsed_data, file_path
 
@@ -243,6 +322,7 @@ class ActivityTypeDataCollector(DataCollector):
         raw_data = self.client.get_player_data(self.token, self.player_id, "TIZEN(DETAIL)",
                                              start_date=start_date, end_date=end_date)
         parsed_data = self._parse_tizen_data(raw_data, "ACTIVITY_TYPE")
+        parsed_data = self._filter_data_by_date(parsed_data, start_date, end_date)
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_activity_type.json")
         return parsed_data, file_path
 
@@ -267,6 +347,7 @@ class HeartRateDataCollector(DataCollector):
         raw_data = self.client.get_player_data(self.token, self.player_id, "TIZEN(DETAIL)",
                                              start_date=start_date, end_date=end_date)
         parsed_data = self._parse_tizen_data(raw_data, "HRM_LOG")
+        parsed_data = self._filter_data_by_date(parsed_data, start_date, end_date)
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_heartrate.json")
         return parsed_data, file_path
 
@@ -291,6 +372,7 @@ class AccelerometerDataCollector(DataCollector):
         raw_data = self.client.get_player_data(self.token, self.player_id, "TIZEN(DETAIL)",
                                              start_date=start_date, end_date=end_date)
         parsed_data = self._parse_tizen_data(raw_data, "ACCELEROMETER_LOG")
+        parsed_data = self._filter_data_by_date(parsed_data, start_date, end_date)
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_accelerometer.json")
         return parsed_data, file_path
 
@@ -315,5 +397,6 @@ class NotificationDataCollector(DataCollector):
         raw_data = self.client.get_player_data(self.token, self.player_id, "NOTIFICATION(DETAIL)",
                                              start_date=start_date, end_date=end_date)
         parsed_data = self._parse_general_data(raw_data)
+        parsed_data = self._filter_data_by_date(parsed_data, start_date, end_date)
         file_path = self._save_raw_data(parsed_data, f"player_{self.player_id}_notifications.json")
         return parsed_data, file_path 
