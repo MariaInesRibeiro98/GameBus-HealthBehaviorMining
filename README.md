@@ -221,9 +221,9 @@ The framework extracts and processes the following types of data from GameBus:
    - Notification actions
    - Timestamps
 
-## 🔄 OCEL Format
+## 🔄 OCED Format
 
-The project implements the Object-Centric Event Log (OCEL) 2.0 standard with mHealth-specific extensions. This format enables:
+The project implements the Object-Centric Event Data (OCED) standard with mHealth-specific extensions. This format enables:
 
 - **Object-Centric Analysis**: Track multiple objects (e.g., users, locations, activities) simultaneously
 - **Complex Event Relationships**: Capture rich relationships between events and objects
@@ -231,7 +231,7 @@ The project implements the Object-Centric Event Log (OCEL) 2.0 standard with mHe
 - **Sensor Data Integration**: Seamless integration of various sensor readings
 - **Process Mining Compatibility**: Ready for use with process mining tools
 
-The schema is defined in `schema/mHealth-OCEL2.0.json`.
+The schema is defined in `schema/OCED-mHealth.json`.
 
 ## 🤝 Contributing
 
