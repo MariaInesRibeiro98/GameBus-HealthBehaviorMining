@@ -1,8 +1,40 @@
 # GameBus-HealthBehaviorMining
 
-A framework for extracting, processing, and analyzing health behavior data from the GameBus platform using process mining techniques.
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Project Status: Active Development](https://img.shields.io/badge/Project%20Status-Active%20Development-green)](https://github.com/yourusername/GameBus-HealthBehaviorMining)
 
-## Project Structure
+A comprehensive framework for extracting, processing, and analyzing health behavior data from the GameBus platform using process mining techniques. This project aims to transform raw health and activity data into meaningful insights through object-centric event logs (OCEL), enabling detailed analysis of health behaviors and patterns.
+
+## 🎯 Project Goals
+
+- Extract and process health behavior data from GameBus platform
+- Transform raw sensor data into structured event logs
+- Enable process mining analysis of health behaviors
+- Support research in health behavior patterns and interventions
+- Provide a foundation for personalized health insights
+
+## 📋 Features
+
+- **Data Extraction**: Comprehensive extraction of multiple data types from GameBus API
+  - GPS location data with categorization
+  - Activity type data
+  - Heart rate monitoring
+  - Accelerometer readings
+  - Mood logging
+  - Notification data
+
+- **Location Categorization**: Intelligent location enrichment using Google Places API
+  - Automatic categorization of GPS points
+  - Support for modular processing
+  - Flexible output formats (CSV/JSON)
+
+- **Process Mining Ready**: 
+  - OCEL 2.0 compliant output
+  - Custom mHealth extensions
+  - Support for complex event analysis
+
+## 🏗️ Project Structure
 
 ```
 GameBus-HealthBehaviorMining/
@@ -39,46 +71,40 @@ GameBus-HealthBehaviorMining/
 └── pipeline.py                     # Main pipeline runner
 ```
 
-## Framework Workflow
-
-1. **Data Extraction**: Extract raw data from the GameBus API, including:
-   - GPS location data (latitude, longitude, altitude, speed)
-   - Activity type data (walking, running, etc.)
-   - Heart rate monitoring
-   - Accelerometer readings
-   - Mood logging
-   - Notification data
-   
-   The extraction supports date-based filtering to retrieve data within specific time ranges.
-
-2. **Location Categorization**: Enrich raw location data by categorizing each point using the Google Places API. The categorization service (`src/categorization/location_categorizer.py`) adds a `location_type` field to each record and saves the result in `data/categorized/` as both CSV and JSON. **Missing values are represented as the string `'NaN'` in the output JSON.**
-
-   - The categorization module is modular: you can load, categorize, and save location data in separate steps, or use the legacy one-step method. See [`src/categorization/README.md`](src/categorization/README.md) for full documentation and examples.
-
-3. **Preprocessing** (To be implemented): Clean and normalize the raw and categorized data, handle missing values, synchronize timestamps, etc.
-
-4. **Activity Recognition** (To be implemented): Recognize human activities from the sensor data using machine learning techniques.
-
-5. **OCEL Generation** (To be implemented): Transform the preprocessed data and recognized activities into the Object-Centric Event Log (OCEL) format for process mining.
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.8 or higher
 - GameBus API credentials
+- Google Places API key (for location categorization)
+- Git
 
 ### Installation
 
-1. Clone the repository
-2. Install dependencies:
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/GameBus-HealthBehaviorMining.git
+cd GameBus-HealthBehaviorMining
 ```
+
+2. Create and activate a virtual environment (recommended):
+```bash
+python -m venv venv
+# On Windows
+.\venv\Scripts\activate
+# On Unix or MacOS
+source venv/bin/activate
+```
+
+3. Install dependencies:
+```bash
 pip install -r requirements.txt
 ```
 
-3. Configure the project:
-   - Create a `secret` folder with your GameBus credentials (see below)
-   - Or update the credentials directly in the config files (these will be ignored by Git)
+4. Configure the project:
+   - Create a `secret` folder with your credentials (see Configuration section)
+   - Or update the credentials directly in the config files
 
 ### Configuration
 
@@ -107,9 +133,9 @@ This project can be configured in two ways:
 
 For detailed instructions, see `config/README.md`.
 
-### Usage
+## 💻 Usage
 
-#### Using the Pipeline
+### Using the Pipeline
 
 The pipeline supports various options for data extraction:
 
@@ -149,7 +175,7 @@ categorizer.save_categorized_location_json(df_categorized, player_id)
 
 For more detailed information about the extraction and categorization functionality, see `src/extraction/README.md` and `src/categorization/README.md`.
 
-#### Using Notebooks
+### Using Notebooks
 
 Open and run the Jupyter notebooks in the `notebooks/` directory:
 
@@ -157,7 +183,7 @@ Open and run the Jupyter notebooks in the `notebooks/` directory:
 jupyter notebook notebooks/01_data_extraction.ipynb
 ```
 
-## Data Types
+## 📊 Data Types
 
 The framework extracts and processes the following types of data from GameBus:
 
@@ -195,20 +221,47 @@ The framework extracts and processes the following types of data from GameBus:
    - Notification actions
    - Timestamps
 
-## OCEL Format
+## 🔄 OCEL Format
 
-The project uses the Object-Centric Event Log (OCEL) format for process mining, with extensions specific to mHealth data. The schema includes:
+The project implements the Object-Centric Event Log (OCEL) 2.0 standard with mHealth-specific extensions. This format enables:
 
-- Event types (activities)
-- Object types (entities)
-- Sensor readings 
-- Relationships between objects and events
+- **Object-Centric Analysis**: Track multiple objects (e.g., users, locations, activities) simultaneously
+- **Complex Event Relationships**: Capture rich relationships between events and objects
+- **Temporal Analysis**: Support for detailed temporal analysis of health behaviors
+- **Sensor Data Integration**: Seamless integration of various sensor readings
+- **Process Mining Compatibility**: Ready for use with process mining tools
 
-## License
+The schema is defined in `schema/mHealth-OCEL2.0.json`.
 
-This project is licensed under the MIT License.
+## 🤝 Contributing
 
-## Acknowledgments
+We welcome contributions to improve this framework! Here's how you can help:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+Please read our [Contributing Guidelines](CONTRIBUTING.md) for more details.
+
+## 📝 Future Work
+
+- [ ] Implement preprocessing pipeline
+- [ ] Add activity recognition module
+
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
 
 - GameBus platform for providing the API
-- OCEL standard for process mining
+- OCED standard for process mining
+- Google Places API for location categorization
+- All contributors and users of this framework
+
+## 📧 Contact
+
+For questions and support, please open an issue in the GitHub repository or contact the maintainers.
