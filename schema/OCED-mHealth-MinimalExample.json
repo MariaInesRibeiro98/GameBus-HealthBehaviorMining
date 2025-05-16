@@ -98,13 +98,13 @@
     "sensorEvents": [
       {
         "id": "se-001",
-        "timestamp": "2025-05-13T08:15:23Z",
+        "time": "2025-05-13T08:15:23Z",
         "sensorEventType": "accelerometer_reading",
         "sensorEventTypeAttributes": [
-          { "name": "x_value", "value": "0.23" },
-          { "name": "y_value", "value": "1.45" },
-          { "name": "z_value", "value": "9.78" },
-          { "name": "motion_intensity", "value": "3.2" }
+          { "name": "x_value", "value": 0.23 },
+          { "name": "y_value", "value": 1.45 },
+          { "name": "z_value", "value": 9.78 },
+          { "name": "motion_intensity", "value": 3.2 }
         ],
         "relationships": [
           { "id": "be-001", "type": "behaviorEvent", "qualifier": "during" },
@@ -113,11 +113,11 @@
       },
       {
         "id": "se-002",
-        "timestamp": "2025-05-13T08:15:24Z",
+        "time": "2025-05-13T08:15:24Z",
         "sensorEventType": "heart_rate_reading",
         "sensorEventTypeAttributes": [
-          { "name": "bpm", "value": "142" },
-          { "name": "confidence", "value": "0.95" }
+          { "name": "bpm", "value": 142 },
+          { "name": "confidence", "value": 0.95 }
         ],
         "relationships": [
           { "id": "be-001", "type": "behaviorEvent", "qualifier": "during" },
@@ -126,14 +126,14 @@
       },
       {
         "id": "se-003",
-        "timestamp": "2025-05-13T08:15:24Z",
+        "time": "2025-05-13T08:15:24Z",
         "sensorEventType": "gps_location",
         "sensorEventTypeAttributes": [
-          { "name": "latitude", "value": "37.7749" },
-          { "name": "longitude", "value": "-122.4194" },
-          { "name": "altitude", "value": "12.5" },
-          { "name": "accuracy", "value": "3.8" },
-          { "name": "speed", "value": "3.2" }
+          { "name": "latitude", "value": 37.7749 },
+          { "name": "longitude", "value": -122.4194 },
+          { "name": "altitude", "value": 12.5 },
+          { "name": "accuracy", "value": 3.8 },
+          { "name": "speed", "value": 3.2 }
         ],
         "relationships": [
           { "id": "be-001", "type": "behaviorEvent", "qualifier": "during" },
@@ -142,11 +142,11 @@
       },
       {
         "id": "se-004",
-        "timestamp": "2025-05-13T16:42:10Z",
+        "time": "2025-05-13T16:42:10Z",
         "sensorEventType": "heart_rate_reading",
         "sensorEventTypeAttributes": [
-          { "name": "bpm", "value": "72" },
-          { "name": "confidence", "value": "0.98" }
+          { "name": "bpm", "value": 72 },
+          { "name": "confidence", "value": 0.98 }
         ],
         "relationships": [
           { "id": "be-002", "type": "behaviorEvent", "qualifier": "before" },
@@ -157,48 +157,48 @@
     "behaviorEvents": [
       {
         "id": "be-001",
-        "timestamp": "2025-05-13T08:12:00Z",
+        "time": "2025-05-13T08:12:00Z",
         "behaviorEventType": "running",
         "behaviorEventTypeAttributes": [
-          { "name": "duration_seconds", "value": "1800" },
-          { "name": "distance_meters", "value": "5230.5" },
-          { "name": "calories_burned", "value": "320" },
-          { "name": "avg_speed", "value": "2.9" }
+          { "name": "duration_seconds", "value": 1800 },
+          { "name": "distance_meters", "value": 5230.5 },
+          { "name": "calories_burned", "value": 320 },
+          { "name": "avg_speed", "value": 2.9 }
         ],
         "relationships": [
-          { "objectId": "obj-001", "qualifier": "performed_by" },
-          { "objectId": "obj-004", "qualifier": "occurred_on" },
-          { "objectId": "obj-003", "qualifier": "part_of" }
+          { "id": "obj-001", "type": "object", "qualifier": "performed_by" },
+          { "id": "obj-004", "type": "object", "qualifier": "occurred_on" },
+          { "id": "obj-003", "type": "object", "qualifier": "part_of" }
         ]
       },
       {
         "id": "be-002",
-        "timestamp": "2025-05-13T16:45:00Z",
+        "time": "2025-05-13T16:45:00Z",
         "behaviorEventType": "moderate_activity",
         "behaviorEventTypeAttributes": [
-          { "name": "duration_seconds", "value": "3600" },
+          { "name": "duration_seconds", "value": 3600 },
           { "name": "activity_type", "value": "cycling" },
-          { "name": "calories_burned", "value": "450" },
-          { "name": "perceived_exertion", "value": "6" }
+          { "name": "calories_burned", "value": 450 },
+          { "name": "perceived_exertion", "value": 6 }
         ],
         "relationships": [
-          { "objectId": "obj-001", "qualifier": "performed_by" },
-          { "objectId": "obj-004", "qualifier": "occurred_on" },
-          { "objectId": "obj-003", "qualifier": "part_of" }
+          { "id": "obj-001", "type": "object", "qualifier": "performed_by" },
+          { "id": "obj-004", "type": "object", "qualifier": "occurred_on" },
+          { "id": "obj-003", "type": "object", "qualifier": "part_of" }
         ]
       },
       {
         "id": "be-003",
-        "timestamp": "2025-05-13T20:00:00Z",
+        "time": "2025-05-13T20:00:00Z",
         "behaviorEventType": "medication_taken",
         "behaviorEventTypeAttributes": [
           { "name": "medication_name", "value": "Vitamin D" },
           { "name": "dosage", "value": "1000 IU" },
-          { "name": "adherence", "value": "true" }
+          { "name": "adherence", "value": true }
         ],
         "relationships": [
-          { "objectId": "obj-001", "qualifier": "performed_by" },
-          { "objectId": "obj-004", "qualifier": "occurred_on" }
+          { "id": "obj-001", "type": "object", "qualifier": "performed_by" },
+          { "id": "obj-004", "type": "object", "qualifier": "occurred_on" }
         ]
       }
     ],
@@ -207,24 +207,24 @@
         "id": "obj-001",
         "type": "user",
         "attributes": [
-          { "name": "age", "value": "34", "timestamp": "2025-01-01T00:00:00Z" },
-          { "name": "weight_kg", "value": "72.5", "timestamp": "2025-05-12T07:00:00Z" },
-          { "name": "height_cm", "value": "175", "timestamp": "2025-01-01T00:00:00Z" },
-          { "name": "gender", "value": "female", "timestamp": "2025-01-01T00:00:00Z" },
-          { "name": "fitness_goal", "value": "increase_endurance", "timestamp": "2025-04-15T00:00:00Z" }
+          { "name": "age", "value": 34, "time": "2025-01-01T00:00:00Z" },
+          { "name": "weight_kg", "value": 72.5, "time": "2025-05-12T07:00:00Z" },
+          { "name": "height_cm", "value": 175, "time": "2025-01-01T00:00:00Z" },
+          { "name": "gender", "value": "female", "time": "2025-01-01T00:00:00Z" },
+          { "name": "fitness_goal", "value": "increase_endurance", "time": "2025-04-15T00:00:00Z" }
         ],
         "relationships": [
-          { "objectId": "obj-002", "qualifier": "owns" }
+          { "id": "obj-002", "type": "object", "qualifier": "owns" }
         ]
       },
       {
         "id": "obj-002",
         "type": "device",
         "attributes": [
-          { "name": "model", "value": "HealthWatch Pro 5", "timestamp": "2025-01-01T00:00:00Z" },
-          { "name": "os_version", "value": "4.2.1", "timestamp": "2025-04-30T00:00:00Z" },
-          { "name": "battery_level", "value": "0.78", "timestamp": "2025-05-13T20:05:00Z" },
-          { "name": "last_sync", "value": "2025-05-13T20:05:00Z", "timestamp": "2025-05-13T20:05:00Z" }
+          { "name": "model", "value": "HealthWatch Pro 5", "time": "2025-01-01T00:00:00Z" },
+          { "name": "os_version", "value": "4.2.1", "time": "2025-04-30T00:00:00Z" },
+          { "name": "battery_level", "value": 0.78, "time": "2025-05-13T20:05:00Z" },
+          { "name": "last_sync", "value": "2025-05-13T20:05:00Z", "time": "2025-05-13T20:05:00Z" }
         ],
         "relationships": []
       },
@@ -232,24 +232,24 @@
         "id": "obj-003",
         "type": "intervention",
         "attributes": [
-          { "name": "type", "value": "cardiovascular_improvement", "timestamp": "2025-05-01T00:00:00Z" },
-          { "name": "start_date", "value": "2025-05-01", "timestamp": "2025-05-01T00:00:00Z" },
-          { "name": "end_date", "value": "2025-06-01", "timestamp": "2025-05-01T00:00:00Z" },
-          { "name": "goal", "value": "run_5k_under_25min", "timestamp": "2025-05-01T00:00:00Z" },
-          { "name": "status", "value": "in_progress", "timestamp": "2025-05-13T00:00:00Z" }
+          { "name": "type", "value": "cardiovascular_improvement", "time": "2025-05-01T00:00:00Z" },
+          { "name": "start_date", "value": "2025-05-01", "time": "2025-05-01T00:00:00Z" },
+          { "name": "end_date", "value": "2025-06-01", "time": "2025-05-01T00:00:00Z" },
+          { "name": "goal", "value": "run_5k_under_25min", "time": "2025-05-01T00:00:00Z" },
+          { "name": "status", "value": "in_progress", "time": "2025-05-13T00:00:00Z" }
         ],
         "relationships": [
-          { "objectId": "obj-001", "qualifier": "assigned_to" }
+          { "id": "obj-001", "type": "object", "qualifier": "assigned_to" }
         ]
       },
       {
         "id": "obj-004",
         "type": "day",
         "attributes": [
-          { "name": "date", "value": "2025-05-13", "timestamp": "2025-05-13T00:00:00Z" },
-          { "name": "step_goal", "value": "10000", "timestamp": "2025-05-13T00:00:00Z" },
-          { "name": "weather", "value": "sunny", "timestamp": "2025-05-13T08:00:00Z" },
-          { "name": "sleep_quality", "value": "good", "timestamp": "2025-05-13T07:00:00Z" }
+          { "name": "date", "value": "2025-05-13", "time": "2025-05-13T00:00:00Z" },
+          { "name": "step_goal", "value": 10000, "time": "2025-05-13T00:00:00Z" },
+          { "name": "weather", "value": "sunny", "time": "2025-05-13T08:00:00Z" },
+          { "name": "sleep_quality", "value": "good", "time": "2025-05-13T07:00:00Z" }
         ],
         "relationships": []
       }

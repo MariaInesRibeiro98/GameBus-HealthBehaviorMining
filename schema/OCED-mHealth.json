@@ -71,16 +71,16 @@
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "timestamp": { "type": "number" },
                     "sensorEventType": { "type": "string" },
+                    "time": { "type": "string", "format": "date-time" },
                     "sensorEventTypeAttributes": {
                         "type": "array",
                         "items": {
                             "type": "object",
                             "properties": {
                                 "name": { "type": "string" },
-                                "value": { "type": ["number", "string"] }
-                            },
+                                "value": { "type": [ "string", "number" ] }
+                            },    
                             "required": ["name", "value"]
                         }
                     },
@@ -97,7 +97,7 @@
                         }
                     }
                 },
-                "required": ["id", "sensorEventType", "timestamp"]
+                "required": ["id", "sensorEventType", "time"]
             }
         },
         "behaviorEvents": {
@@ -106,15 +106,15 @@
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "timestamp": { "type": "number"},
                     "behaviorEventType": { "type": "string" },
+                    "time": { "type": "string", "format": "date-time" },
                     "behaviorEventTypeAttributes": {
                         "type": "array",
                         "items": {
                             "type": "object",
                             "properties": {
                                 "name": { "type": "string" },
-                                "value": { "type": ["string", "number"] }
+                                "value": { "type": [ "string", "number" ] }
                             },
                             "required": ["name", "value"]
                         }
@@ -124,14 +124,15 @@
                         "items": {
                             "type": "object",
                             "properties": {
-                                "objectId": { "type": "string" },
+                                "id": { "type": "string" },
+                                "type": { "type": "string", "enum": ["object"]},
                                 "qualifier": { "type": "string" }
                             },
-                            "required": ["objectId", "qualifier"]
+                            "required": ["id", "type", "qualifier"]
                         }
                     }
                 },
-                "required": ["id", "timestamp", "behaviorEventType"]
+                "required": ["id", "behaviorEventType", "time"]
             }
         },
         "objects": {
@@ -146,10 +147,11 @@
                         "items": {
                             "type": "object",
                             "properties": {
-                                "objectId": { "type": "string" },
+                                "id": { "type": "string" },
+                                "type": { "type": "string", "enum": ["object"] },
                                 "qualifier": { "type": "string" }
                             },
-                            "required": ["objectId", "qualifier"]
+                            "required": ["id", "type", "qualifier"]
                         }
                     },
                     "attributes": {
@@ -158,10 +160,10 @@
                             "type": "object",
                             "properties": {
                                 "name": { "type": "string" },
-                                "value": { "type": ["string", "number"] },
-                                "timestamp": { "type": "number"}
+                                "value": { "type": [ "string", "number" ] },
+                                "time": { "type": "string", "format": "date-time" }
                             },
-                            "required": ["name", "value", "timestamp"]
+                            "required": ["name", "value", "time"]
                         }
                     }
                 },
