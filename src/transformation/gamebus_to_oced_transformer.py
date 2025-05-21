@@ -305,13 +305,13 @@ class GameBusToOCEDTransformer:
                     "time": self._convert_timestamp(row.get("ts", "")),
                     "sensorEventTypeAttributes": [
                         {"name": "type", "value": str(row.get("type", "unknown"))},
-                        {"name": "speed", "value": float(row.get("speed", 0))},
-                        {"name": "steps", "value": int(row.get("steps", 0))},
-                        {"name": "walks", "value": int(row.get("walks", 0))},
-                        {"name": "runs", "value": int(row.get("runs", 0))},
-                        {"name": "freq", "value": float(row.get("freq", 0))},
-                        {"name": "distance", "value": float(row.get("distance", 0))},
-                        {"name": "calories", "value": float(row.get("cals", 0))}
+                        {"name": "speed", "value": float(row.get("speed"))},
+                        {"name": "steps", "value": int(row.get("steps"))},
+                        {"name": "walks", "value": int(row.get("walks"))},
+                        {"name": "runs", "value": int(row.get("runs"))},
+                        {"name": "freq", "value": float(row.get("freq"))},
+                        {"name": "distance", "value": float(row.get("distance"))},
+                        {"name": "calories", "value": float(row.get("cals"))}
                     ],
                     "relationships": [
                         {
@@ -337,8 +337,8 @@ class GameBusToOCEDTransformer:
                     "sensorEventType": "heartrate",
                     "time": self._convert_timestamp(row.get("ts", "")),
                     "sensorEventTypeAttributes": [
-                        {"name": "bpm", "value": float(row.get("bpm", 0))},
-                        {"name": "pp", "value": float(row.get("pp", 0))}
+                        {"name": "bpm", "value": float(row.get("hr"))},
+                        {"name": "pp", "value": float(row.get("pp"))}
                     ],
                     "relationships": [
                         {
@@ -364,11 +364,11 @@ class GameBusToOCEDTransformer:
                     "sensorEventType": "location",
                     "time": self._convert_timestamp(row.get("TIMESTAMP", "")),
                     "sensorEventTypeAttributes": [
-                        {"name": "latitude", "value": float(row.get("LATITUDE", 0.0))},
-                        {"name": "longitude", "value": float(row.get("LONGITUDE", 0.0))},
-                        {"name": "altitude", "value": float(row.get("ALTIDUDE", 0.0))},
-                        {"name": "speed", "value": float(row.get("SPEED", 0.0))},
-                        {"name": "error", "value": float(row.get("ERROR", 0.0))},
+                        {"name": "latitude", "value": float(row.get("LATITUDE"))},
+                        {"name": "longitude", "value": float(row.get("LONGITUDE"))},
+                        {"name": "altitude", "value": float(row.get("ALTIDUDE"))},
+                        {"name": "speed", "value": float(row.get("SPEED"))},
+                        {"name": "error", "value": float(row.get("ERROR"))},
                         #---- Uncomment if you want the categorized location data
                         #{"name": "location_type", "value": str(row.get("location_type", "unknown"))}
                     ],
@@ -396,9 +396,9 @@ class GameBusToOCEDTransformer:
                     "behaviorEventType": "mood",
                     "time": self._convert_timestamp(row.get("EVENT_TIMESTAMP", "")),
                     "behaviorEventTypeAttributes": [
-                        {"name": "valence", "value": int(row.get("VALENCE_STATE_VALUE", 0))},
-                        {"name": "arousal", "value": int(row.get("AROUSAL_STATE_VALUE", 0))},
-                        {"name": "stress", "value": int(row.get("STRESS_STATE_VALUE", 0))}
+                        {"name": "valence", "value": int(row.get("VALENCE_STATE_VALUE"))},
+                        {"name": "arousal", "value": int(row.get("AROUSAL_STATE_VALUE"))},
+                        {"name": "stress", "value": int(row.get("STRESS_STATE_VALUE"))}
                     ],
                     "relationships": [
                         {
