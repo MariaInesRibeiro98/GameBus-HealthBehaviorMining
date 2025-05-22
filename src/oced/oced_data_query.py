@@ -5,29 +5,25 @@ from typing import Optional, Dict, Any, List
 import pandas as pd
 
 
-class OCEDDataLoader:
-    """Class for loading and managing OCED (Observed Contextual Event Data) from JSON files."""
+class OCEDDataQuery:
+    """Class for querying and extracting different types of events from OCED (Observed Contextual Event Data) JSON files."""
     
-    def __init__(self, player_id: str):
+    def __init__(self):
         """
-        Initialize the OCED data loader for a specific player.
-        
-        Args:
-            player_id (str): The ID of the player whose data should be loaded
+        Initialize the OCED data query interface.
         """
-        self.player_id = player_id
         # Get the project root directory (parent of src directory)
         self.project_root = Path(__file__).parent.parent.parent
         self.data_dir = self.project_root / "data" / "transformed"
         self.data: Optional[Dict[str, Any]] = None
     
-    def load_json(self, date_suffix: Optional[str] = None) -> Dict[str, Any]:
+    def load_json(self, filename: str) -> Dict[str, Any]:
         """
-        Load the OCED data into a dictionary.
+        Load the OCED data from a specified JSON file.
         
         Args:
-            date_suffix (Optional[str]): Optional date suffix to load a specific version of the data
-                                        (e.g., 'May15' for player_107631_oced_data_May15.json)
+            filename (str): The name of the JSON file to load (e.g., 'player_107631_oced_data.json')
+                           The file should be located in the data/transformed directory.
         
         Returns:
             Dict[str, Any]: The loaded JSON data as a dictionary
@@ -36,12 +32,6 @@ class OCEDDataLoader:
             FileNotFoundError: If the specified JSON file cannot be found
             json.JSONDecodeError: If the JSON file is not properly formatted
         """
-        # Construct the filename
-        filename = f"player_{self.player_id}_oced_data"
-        if date_suffix:
-            filename = f"{filename}_{date_suffix}"
-        filename = f"{filename}.json"
-        
         file_path = self.data_dir / filename
         
         if not file_path.exists():
@@ -51,6 +41,41 @@ class OCEDDataLoader:
             self.data = json.load(f)
         
         return self.data
+    
+    def get_players_by_ids(self, player_ids: List[str]) -> Dict[str, Dict[str, Any]]:
+        """
+        Query player objects from the loaded data that match the given player IDs.
+        
+        Args:
+            player_ids (List[str]): List of player IDs to search for
+        
+        Returns:
+            Dict[str, Dict[str, Any]]: Dictionary mapping player IDs to their corresponding player objects.
+                                      Only includes players that were found in the data.
+                                      
+            
+        Raises:
+            ValueError: If no data has been loaded yet
+        """
+        if self.data is None:
+            raise ValueError("No data has been loaded. Call load_json() first.")
+            
+        # Get all objects from the data
+        objects = self.data.get('objects', [])
+        
+        # Filter for player objects with matching IDs
+        player_objects = {}
+        for obj in objects:
+            if obj.get('type') == 'player':
+                # Find the id attribute
+                for attr in obj.get('attributes', []):
+                    if attr.get('name') == 'id':
+                        player_id = attr.get('value')
+                        if player_id in player_ids:
+                            player_objects[player_id] = obj
+                        break
+        
+        return player_objects
     
     def get_notification_events(self, data: Dict[str, Any]) -> pd.DataFrame:
         """
