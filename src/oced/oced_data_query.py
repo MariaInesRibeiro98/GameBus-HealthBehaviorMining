@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 import pandas as pd
+from datetime import datetime
 
 
 class OCEDDataQuery:
@@ -62,6 +63,7 @@ class OCEDDataQuery:
             
         # Get all objects from the data
         objects = self.data.get('objects', [])
+        print(objects)
         
         # Filter for player objects with matching IDs
         player_objects = {}
@@ -228,12 +230,14 @@ class OCEDDataQuery:
         
         return df
     
-    def get_accelerometer_events(self, data: Dict[str, Any]) -> pd.DataFrame:
+    def get_accelerometer_events(self, data: Dict[str, Any], start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> pd.DataFrame:
         """
         Extract accelerometer events from the sensorEvents in the data dictionary.
         
         Args:
             data (Dict[str, Any]): The dictionary returned by load_json containing the OCED data
+            start_date (Optional[datetime]): Optional start date to filter events. If provided, only events after this date will be included.
+            end_date (Optional[datetime]): Optional end date to filter events. If provided, only events before this date will be included.
         
         Returns:
             pd.DataFrame: A DataFrame containing accelerometer events with columns:
@@ -242,13 +246,24 @@ class OCEDDataQuery:
                          - y: The y-axis acceleration value from sensorEventTypeAttributes
                          - z: The z-axis acceleration value from sensorEventTypeAttributes
         """
+        # Print date filtering parameters
+        print(f"Date filtering parameters:")
+        print(f"  Start date: {start_date}")
+        print(f"  End date: {end_date}")
+        
         # Get the sensorEvents from the data
         sensor_events = data.get('sensorEvents', [])
+        print(f"Total number of sensor events found: {len(sensor_events)}")
+        
+        # Print unique sensor event types to see what's available
+        event_types = set(event.get('sensorEventType') for event in sensor_events)
+        print(f"Available sensor event types: {event_types}")
         
         # Filter for accelerometer events and extract required fields
         accelerometer_events = []
         for event in sensor_events:
-            if event.get('sensorEventType') == 'accelerometer':
+            event_type = event.get('sensorEventType')
+            if event_type == 'accelerometer':
                 # Initialize accelerometer attributes
                 accel_data = {'timestamp': event['time']}
                 
@@ -266,8 +281,14 @@ class OCEDDataQuery:
                 if all(coord in accel_data for coord in ['x', 'y', 'z']):
                     accelerometer_events.append(accel_data)
         
+        print(f"Number of accelerometer events found: {len(accelerometer_events)}")
+        
         if not accelerometer_events:
             print("Warning: No accelerometer events found in the data")
+            # Print a sample event to see its structure
+            if sensor_events:
+                print("Sample sensor event structure:")
+                print(json.dumps(sensor_events[0], indent=2))
             return None
         
         # Convert to DataFrame
@@ -276,17 +297,32 @@ class OCEDDataQuery:
         # Convert timestamp to datetime if it's not already
         df['timestamp'] = pd.to_datetime(df['timestamp'], format='ISO8601')
         
+        # Print date range of data before filtering
+        print(f"Date range of data before filtering:")
+        print(f"  Earliest timestamp: {df['timestamp'].min()}")
+        print(f"  Latest timestamp: {df['timestamp'].max()}")
+        
+        # Apply date filtering if start_date or end_date is provided
+        if start_date is not None:
+            df = df[df['timestamp'] >= start_date]
+            print(f"After start date filtering: {len(df)} events remaining")
+        if end_date is not None:
+            df = df[df['timestamp'] <= end_date]
+            print(f"After end date filtering: {len(df)} events remaining")
+        
         # Sort by timestamp
         df = df.sort_values('timestamp')
         
         return df
     
-    def get_heartrate_events(self, data: Dict[str, Any]) -> pd.DataFrame:
+    def get_heartrate_events(self, data: Dict[str, Any], start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> pd.DataFrame:
         """
         Extract heartrate events from the sensorEvents in the data dictionary.
         
         Args:
             data (Dict[str, Any]): The dictionary returned by load_json containing the OCED data
+            start_date (Optional[datetime]): Optional start date to filter events. If provided, only events after this date will be included.
+            end_date (Optional[datetime]): Optional end date to filter events. If provided, only events before this date will be included.
         
         Returns:
             pd.DataFrame: A DataFrame containing heartrate events with columns:
@@ -294,13 +330,24 @@ class OCEDDataQuery:
                          - bpm: The beats per minute value from sensorEventTypeAttributes
                          - pp: The pulse pressure value from sensorEventTypeAttributes
         """
+        # Print date filtering parameters
+        print(f"Date filtering parameters:")
+        print(f"  Start date: {start_date}")
+        print(f"  End date: {end_date}")
+        
         # Get the sensorEvents from the data
         sensor_events = data.get('sensorEvents', [])
+        print(f"Total number of sensor events found: {len(sensor_events)}")
+        
+        # Print unique sensor event types to see what's available
+        event_types = set(event.get('sensorEventType') for event in sensor_events)
+        print(f"Available sensor event types: {event_types}")
         
         # Filter for heartrate events and extract required fields
         heartrate_events = []
         for event in sensor_events:
-            if event.get('sensorEventType') == 'heartrate':
+            event_type = event.get('sensorEventType')
+            if event_type == 'heartrate':
                 # Initialize heartrate attributes
                 hr_data = {'timestamp': event['time']}
                 
@@ -318,8 +365,14 @@ class OCEDDataQuery:
                 if 'bpm' in hr_data:
                     heartrate_events.append(hr_data)
         
+        print(f"Number of heartrate events found: {len(heartrate_events)}")
+        
         if not heartrate_events:
             print("Warning: No heartrate events found in the data")
+            # Print a sample event to see its structure
+            if sensor_events:
+                print("Sample sensor event structure:")
+                print(json.dumps(sensor_events[0], indent=2))
             return None
         
         # Convert to DataFrame
@@ -327,6 +380,19 @@ class OCEDDataQuery:
         
         # Convert timestamp to datetime if it's not already
         df['timestamp'] = pd.to_datetime(df['timestamp'], format='ISO8601')
+        
+        # Print date range of data before filtering
+        print(f"Date range of data before filtering:")
+        print(f"  Earliest timestamp: {df['timestamp'].min()}")
+        print(f"  Latest timestamp: {df['timestamp'].max()}")
+        
+        # Apply date filtering if start_date or end_date is provided
+        if start_date is not None:
+            df = df[df['timestamp'] >= start_date]
+            print(f"After start date filtering: {len(df)} events remaining")
+        if end_date is not None:
+            df = df[df['timestamp'] <= end_date]
+            print(f"After end date filtering: {len(df)} events remaining")
         
         # Sort by timestamp
         df = df.sort_values('timestamp')

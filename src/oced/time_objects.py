@@ -15,11 +15,20 @@ class TimeObject:
     def __init__(self):
         """Initialize the TimeObject class."""
         self.day_objects: Dict[str, Dict[str, Any]] = {}  # Maps date to day object
+        self.week_objects: Dict[str, Dict[str, Any]] = {}  # Maps week start date to week object
         self.day_object_type = {
             "name": "day",
             "attributes": [
                 {"name": "date", "type": "string"},
                 {"name": "day_of_week", "type": "string"}
+            ]
+        }
+        self.week_object_type = {
+            "name": "week",
+            "attributes": [
+                {"name": "week_start_date", "type": "string"},
+                {"name": "week_number", "type": "integer"},
+                {"name": "year", "type": "integer"}
             ]
         }
     
@@ -149,6 +158,110 @@ class TimeObject:
         
         return extended_data, self.day_objects
     
+    def create_week_objects(self, data: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
+        """
+        Create week objects from the OCED data according to OCED-mHealth schema and establish relationships.
+        Weeks start on Monday.
+        
+        Args:
+            data (Dict[str, Any]): The OCED data dictionary containing events
+            
+        Returns:
+            Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]: 
+                - Extended OCED data dictionary with week objects and relationships
+                - Dictionary mapping week start dates to week objects
+        """
+        # Create a copy of the input data to modify
+        extended_data = data.copy()
+        
+        # Initialize objects list if it doesn't exist
+        if 'objects' not in extended_data:
+            extended_data['objects'] = []
+        
+        # Add week object type if it doesn't exist
+        if not any(obj_type['name'] == 'week' for obj_type in extended_data.get('objectTypes', [])):
+            if 'objectTypes' not in extended_data:
+                extended_data['objectTypes'] = []
+            extended_data['objectTypes'].append(self.week_object_type)
+        
+        print("Week object type added.")
+        
+        # Get all dates from existing day objects
+        if not self.day_objects:
+            print("No day objects found. Please create day objects first.")
+            return extended_data, self.week_objects
+        
+        # Convert dates to pandas datetime and find unique weeks
+        dates = pd.to_datetime(list(self.day_objects.keys()))
+        
+        # Calculate week start dates (Monday) for each date
+        # Convert to Series first to use dt accessor
+        dates_series = pd.Series(dates)
+        week_starts = dates_series - pd.to_timedelta(dates_series.dt.dayofweek, unit='D')
+        unique_weeks = sorted(set(week_starts))
+        
+        print(f"Found {len(unique_weeks)} unique weeks")
+        
+        # Create week objects
+        for week_start in unique_weeks:
+            week_number = week_start.isocalendar()[1]
+            year = week_start.year
+            
+            # Create week object according to schema
+            week_object = {
+                "id": str(uuid.uuid4()),
+                "type": "week",
+                "attributes": [
+                    {
+                        "name": "week_start_date",
+                        "value": str(week_start.date()),
+                        "time": week_start.isoformat()
+                    },
+                    {
+                        "name": "week_number",
+                        "value": week_number,
+                        "time": week_start.isoformat()
+                    },
+                    {
+                        "name": "year",
+                        "value": year,
+                        "time": week_start.isoformat()
+                    }
+                ],
+                "relationships": []
+            }
+            
+            # Add week object to the data
+            extended_data['objects'].append(week_object)
+            self.week_objects[str(week_start.date())] = week_object
+            
+            # Add relationships to days in this week
+            week_end = week_start + pd.Timedelta(days=6)
+            days_in_week = [day for day in self.day_objects.values() 
+                          if week_start.date() <= pd.to_datetime(day['attributes'][0]['value']).date() <= week_end.date()]
+            
+            for day in days_in_week:
+                # Add relationship from week to day
+                week_to_day = {
+                    "id": day['id'],
+                    "type": "object",
+                    "qualifier": "contains"
+                }
+                week_object['relationships'].append(week_to_day)
+                
+                # Add relationship from day to week
+                day_to_week = {
+                    "id": week_object['id'],
+                    "type": "object",
+                    "qualifier": "belongs_to"
+                }
+                if 'relationships' not in day:
+                    day['relationships'] = []
+                day['relationships'].append(day_to_week)
+        
+        print(f"Created {len(self.week_objects)} week objects")
+        return extended_data, self.week_objects
+    
     def save_extended_data(self, filename: str, extended_data: Dict[str, Any], compress: bool = False) -> None:
         """
         Save the extended OCED data to a JSON file in the data/oced directory.
@@ -163,7 +276,7 @@ class TimeObject:
         project_root = Path(__file__).parent.parent.parent
         
         # Construct the full path to the data/oced directory
-        output_dir = project_root / 'data' / 'oced'
+        output_dir = project_root / 'data' / 'transformed'
         output_path = output_dir / filename
         
         # Create directory if it doesn't exist
@@ -197,6 +310,18 @@ class TimeObject:
             Optional[Dict[str, Any]]: Day object if found, None otherwise
         """
         return self.day_objects.get(date_str)
+    
+    def get_week(self, week_start_date: str) -> Optional[Dict[str, Any]]:
+        """
+        Get a specific week object by its start date.
+        
+        Args:
+            week_start_date (str): Week start date in YYYY-MM-DD format (must be a Monday)
+            
+        Returns:
+            Optional[Dict[str, Any]]: Week object if found, None otherwise
+        """
+        return self.week_objects.get(week_start_date)
     
     def get_days_by_weekday(self, weekday: str) -> List[Dict[str, Any]]:
         """
@@ -242,4 +367,24 @@ class TimeObject:
             if any(rel['id'] == day_object['id'] for rel in event.get('relationships', [])):
                 events['behavior'].append(event)
         
-        return events 
+        return events
+    
+    def get_days_in_week(self, week_start_date: str) -> List[Dict[str, Any]]:
+        """
+        Get all days that belong to a specific week.
+        
+        Args:
+            week_start_date (str): Week start date in YYYY-MM-DD format (must be a Monday)
+            
+        Returns:
+            List[Dict[str, Any]]: List of day objects in the specified week
+        """
+        week_object = self.get_week(week_start_date)
+        if not week_object:
+            return []
+            
+        return [
+            self.day_objects[day_id] for day_id in self.day_objects
+            if any(rel['id'] == week_object['id'] 
+                  for rel in self.day_objects[day_id].get('relationships', []))
+        ] 
