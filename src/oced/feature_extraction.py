@@ -351,4 +351,40 @@ class FeatureExtractor:
         """
         return self.df.copy()
 
+    def combine_feature_statistics(self, stats_dfs):
+        """
+        Combine multiple feature statistics dataframes into a single dataframe.
+        Only keeps the feature statistics columns and window time columns.
+        
+        Parameters:
+            stats_dfs (list): List of DataFrames returned by calculate_windowed_statistics()
+            
+        Returns:
+            pd.DataFrame: Combined DataFrame with all feature statistics and window times
+        """
+        # Initialize the combined dataframe with the first one
+        if not stats_dfs:
+            raise ValueError("No statistics dataframes provided")
+            
+        # Select only feature statistics and window time columns from each dataframe
+        subset_dfs = []
+        for df in stats_dfs:
+            # Get all columns except metadata columns
+            feature_cols = [col for col in df.columns 
+                          if col not in ['valid_samples_percent', 'valid_samples_count', 
+                                       'total_samples']]
+            subset_dfs.append(df[feature_cols])
+        
+        # Merge all dataframes on window timestamps
+        combined_stats = subset_dfs[0]
+        for df in subset_dfs[1:]:
+            combined_stats = pd.merge(combined_stats, df,
+                                    on=['window_start', 'window_end'],
+                                    how='outer')
+        
+        # Sort by window start time
+        combined_stats = combined_stats.sort_values('window_start')
+        
+        return combined_stats
+
 
