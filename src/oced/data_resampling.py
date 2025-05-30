@@ -3,10 +3,13 @@ import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List
 
-class SensorEventAbstraction:
+class SensorDataResampler:
     def __init__(self, **sensor_dfs):
         """
-        Initialize the SensorEventAbstraction class with any number of sensor dataframes.
+        Initialize the SensorDataResampler class with any number of sensor dataframes for resampling and synchronization.
+        
+        This class handles resampling multiple sensor data streams to a common sampling frequency
+        and synchronizes them to a common timeline, while maintaining data quality information.
         
         Args:
             **sensor_dfs: Keyword arguments where each key is a sensor name and value is a DataFrame.
@@ -14,7 +17,7 @@ class SensorEventAbstraction:
                         Example: accelerometer=acc_df, heartrate=hr_df, temperature=temp_df
         
         Example:
-            sensor_abstraction = SensorEventAbstraction(
+            sensor_resampler = SensorDataResampler(
                 accelerometer=acc_df,  # columns: ['timestamp', 'x', 'y', 'z']
                 heartrate=hr_df,      # columns: ['timestamp', 'bpm', 'pp']
                 temperature=temp_df    # columns: ['timestamp', 'temp']
@@ -43,15 +46,15 @@ class SensorEventAbstraction:
             # Store the processed dataframe
             self.sensor_dfs[sensor_name] = df_copy
     
-    def create_sync_timestamps(self, sampling_freq=25):
+    def create_resampled_timestamps(self, sampling_freq=25):
         """
-        Create a synchronized timestamp series at the specified sampling frequency.
+        Create a synchronized timestamp series at the specified sampling frequency for resampling.
         
         Args:
-            sampling_freq (int): Sampling frequency in Hz (default: 25 Hz)
+            sampling_freq (int): Target sampling frequency in Hz (default: 25 Hz)
             
         Returns:
-            pd.DatetimeIndex: Synchronized timestamps at specified frequency
+            pd.DatetimeIndex: Synchronized timestamps at specified frequency for resampling
         """
         if not self.sensor_dfs:
             raise ValueError("No sensor data available")
@@ -72,19 +75,19 @@ class SensorEventAbstraction:
         
         return timestamps
     
-    def interpolate_sensor_data(self, timestamps, max_gap_seconds):
+    def resample_sensor_data(self, timestamps, max_gap_seconds):
         """
-        Interpolate all sensor data to the synchronized timestamps, respecting maximum gap thresholds.
-        Uses a sentinel value for invalid data and maintains a data quality mask.
+        Resample all sensor data to the synchronized timestamps using linear interpolation.
+        Respects maximum gap thresholds to avoid interpolating across large gaps.
         
         Args:
-            timestamps (pd.DatetimeIndex): Synchronized timestamps
+            timestamps (pd.DatetimeIndex): Synchronized timestamps for resampling
             max_gap_seconds (float): Maximum acceptable gap between consecutive sensor events in seconds.
                                    Timestamps falling within larger gaps will be marked as invalid.
             
         Returns:
             tuple: (pd.DataFrame, pd.DataFrame) containing:
-                - Synchronized and interpolated sensor data (using sentinel_value for invalid data)
+                - Resampled and interpolated sensor data (using sentinel_value for invalid data)
                 - Boolean mask indicating valid data (True) vs invalid data (False)
         """
         # Create empty dataframe with synchronized timestamps
@@ -183,9 +186,9 @@ class SensorEventAbstraction:
         
         return sync_df, quality_mask
     
-    def synchronize_sensors(self, sampling_freq=25, max_gap_seconds=1.0):
+    def resample_and_sync_sensors(self, sampling_freq=25, max_gap_seconds=1.0):
         """
-        Synchronize all sensor dataframes to a common sampling frequency using linear interpolation.
+        Resample and synchronize all sensor dataframes to a common sampling frequency using linear interpolation.
         Respects maximum gap thresholds to avoid interpolating across large gaps.
         
         Args:
@@ -195,29 +198,29 @@ class SensorEventAbstraction:
                                    Default is 1.0 second.
             
         Returns:
-            pd.DataFrame: Synchronized and interpolated sensor data (using sentinel_value for invalid data)
+            pd.DataFrame: Resampled and synchronized sensor data (using sentinel_value for invalid data)
         """
-        # Create synchronized timestamps
-        sync_timestamps = self.create_sync_timestamps(sampling_freq)
+        # Create synchronized timestamps for resampling
+        sync_timestamps = self.create_resampled_timestamps(sampling_freq)
         
-        # Interpolate sensor data and get quality mask
-        self.sync_df, self.data_quality_mask = self.interpolate_sensor_data(sync_timestamps, max_gap_seconds)
+        # Resample sensor data and get quality mask
+        self.sync_df, self.data_quality_mask = self.resample_sensor_data(sync_timestamps, max_gap_seconds)
         
         return self.sync_df
     
-    def get_valid_data(self, sensor_name=None, column=None):
+    def get_resampled_data(self, sensor_name=None, column=None):
         """
-        Get a view of the synchronized data with only valid values (excluding sentinel values).
+        Get a view of the resampled and synchronized data with only valid values (excluding sentinel values).
         
         Args:
             sensor_name (str, optional): Filter for a specific sensor
             column (str, optional): Filter for a specific column
             
         Returns:
-            pd.DataFrame: DataFrame containing only valid data points
+            pd.DataFrame: DataFrame containing only valid resampled data points
         """
         if self.sync_df is None:
-            raise ValueError("Data has not been synchronized yet. Call synchronize_sensors() first.")
+            raise ValueError("Data has not been resampled yet. Call resample_and_sync_sensors() first.")
         
         # Get the relevant columns
         if sensor_name is not None:
@@ -339,22 +342,22 @@ class SensorEventAbstraction:
             'gap_stats': gap_stats
         }
     
-    def get_sync_stats(self):
+    def get_resampling_stats(self):
         """
-        Get statistics about the synchronized data.
+        Get statistics about the resampled and synchronized data.
         Now returns combined statistics since all sensors share the same quality mask.
         
         Returns:
-            dict: Dictionary containing synchronization statistics:
-                - sampling_frequency: The sampling frequency used for synchronization
+            dict: Dictionary containing resampling statistics:
+                - sampling_frequency: The sampling frequency used for resampling
                 - max_gap_seconds: The maximum allowed gap duration
-                - num_sensors: Number of sensors being synchronized
+                - num_sensors: Number of sensors being resampled
                 - sensor_names: List of sensor names
                 - sensor_columns: Dictionary mapping sensor names to their data columns
                 - data_quality: Dictionary containing data quality statistics (from get_data_quality_stats)
         """
         if not hasattr(self, 'sync_df'):
-            raise ValueError("Sensors must be synchronized before getting sync stats")
+            raise ValueError("Sensors must be synchronized before getting resampling stats")
             
         # Get data quality statistics
         quality_stats = self.get_data_quality_stats()
@@ -490,7 +493,7 @@ class SensorEventAbstraction:
                 - duration_seconds: float indicating the duration of the invalid period in seconds
                 
         Example:
-            >>> invalid_periods_df = sensor_abstraction.get_invalid_periods_df()
+            >>> invalid_periods_df = sensor_resampler.get_invalid_periods_df()
             >>> print(invalid_periods_df)
                         start_time             end_time  duration_seconds
             0 2025-05-11 10:00:00 2025-05-11 10:05:00            300.0
@@ -525,7 +528,7 @@ class SensorEventAbstraction:
                 - duration_seconds: duration of the period in seconds
         
         Example:
-            >>> valid_periods_df = sensor_abstraction.get_valid_periods_df()
+            >>> valid_periods_df = sensor_resampler.get_valid_periods_df()
             >>> print(valid_periods_df.head())
             >>> # Calculate some statistics
             >>> print(f"Total number of valid periods: {len(valid_periods_df)}")
@@ -702,13 +705,13 @@ class SensorEventAbstraction:
         
         Example:
             >>> # Plot all valid periods
-            >>> sensor_abstraction.plot_valid_periods_hist()
+            >>> sensor_resampler.plot_valid_periods_hist()
             >>> 
             >>> # Plot only valid periods longer than 1 minute
-            >>> sensor_abstraction.plot_valid_periods_hist(min_duration_seconds=60)
+            >>> sensor_resampler.plot_valid_periods_hist(min_duration_seconds=60)
             >>> 
             >>> # Customize the plot
-            >>> sensor_abstraction.plot_valid_periods_hist(bins=30, figsize=(12, 8))
+            >>> sensor_resampler.plot_valid_periods_hist(bins=30, figsize=(12, 8))
         """
         import matplotlib.pyplot as plt
         import seaborn as sns
@@ -767,13 +770,13 @@ class SensorEventAbstraction:
         
         Example:
             >>> # Plot all invalid periods
-            >>> sensor_abstraction.plot_invalid_periods_hist()
+            >>> sensor_resampler.plot_invalid_periods_hist()
             >>> 
             >>> # Plot only invalid periods longer than 1 minute
-            >>> sensor_abstraction.plot_invalid_periods_hist(min_duration_seconds=60)
+            >>> sensor_resampler.plot_invalid_periods_hist(min_duration_seconds=60)
             >>> 
             >>> # Customize the plot
-            >>> sensor_abstraction.plot_invalid_periods_hist(bins=30, figsize=(12, 8))
+            >>> sensor_resampler.plot_invalid_periods_hist(bins=30, figsize=(12, 8))
         """
         import matplotlib.pyplot as plt
         import seaborn as sns
