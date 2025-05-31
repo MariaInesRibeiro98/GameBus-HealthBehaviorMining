@@ -103,7 +103,8 @@ class BoutEventManager:
     
     def _create_day_object(self, date_str: str, extended_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Create a day object for the given date if it doesn't exist using TimeObject.
+        Get or create a specific day object for the given date.
+        Only creates the day object if it doesn't already exist.
         
         Args:
             date_str (str): Date in YYYY-MM-DD format
@@ -112,29 +113,24 @@ class BoutEventManager:
         Returns:
             Dict[str, Any]: The day object
         """
-        # First check if day objects already exist in the data
-        existing_day_objects = [
-            obj for obj in extended_data.get('objects', [])
-            if obj['type'] == 'day'
-        ]
+        # First check if the specific day object exists
+        day_object = next(
+            (obj for obj in extended_data.get('objects', [])
+             if obj['type'] == 'day' and any(
+                 attr['name'] == 'date' and attr['value'] == date_str 
+                 for attr in obj['attributes']
+             )),
+            None
+        )
         
-        # If no day objects exist, create them
-        if not existing_day_objects:
-            print("No day objects found, creating them...")
-            extended_data, _ = self.time_manager.create_day_objects(extended_data)
-        else:
-            print(f"Found {len(existing_day_objects)} existing day objects")
-        
-        # Get the specific day object
-        day_object = self.time_manager.get_day(date_str)
+        # If the day object doesn't exist, create only this specific day
         if not day_object:
-            # If the specific day object doesn't exist, create day objects
-            # This will create all missing day objects including the one we need
-            print(f"Day object for {date_str} not found, creating day objects...")
-            extended_data, _ = self.time_manager.create_day_objects(extended_data)
-            day_object = self.time_manager.get_day(date_str)
+            print(f"Day object for {date_str} not found, creating it...")
+            # Create only this specific day object
+            day_object = self.time_manager.create_single_day_object(date_str, extended_data)
             if not day_object:
                 raise ValueError(f"Failed to create day object for date {date_str}")
+            print(f"Created day object for {date_str}")
         
         return day_object
     
