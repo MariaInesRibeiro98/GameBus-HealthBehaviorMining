@@ -355,14 +355,31 @@ class LocationEventManager:
         if not sorted_events:
             return extended_data, []
         
-        # Group events by day
+        # Group events by day and track active periods for each day
         events_by_day = {}
+        active_periods_by_day = {}  # Maps day_str to list of (start_time, end_time) tuples
+        
         for event in sorted_events:
             event_time = datetime.fromisoformat(event['time'].replace('Z', '+00:00'))
             day_str = event_time.strftime('%Y-%m-%d')
+            
             if day_str not in events_by_day:
                 events_by_day[day_str] = []
+                active_periods_by_day[day_str] = []
+            
             events_by_day[day_str].append(event)
+            
+            # Update active periods for this day
+            if not active_periods_by_day[day_str]:
+                # First event of the day, start a new period
+                active_periods_by_day[day_str].append([event_time, event_time])
+            else:
+                # Check if this event continues the current period or starts a new one
+                current_period = active_periods_by_day[day_str][-1]
+                if (event_time - current_period[1]) <= timedelta(minutes=5):  # Consider 5 min gap as continuous
+                    current_period[1] = event_time
+                else:
+                    active_periods_by_day[day_str].append([event_time, event_time])
         
         # Process each day separately
         all_segments = []  # Store intermediate segments before merging
@@ -371,6 +388,9 @@ class LocationEventManager:
             # Get day object for this date using the new method
             day_object = self._create_day_object(day_str, extended_data)
             day_id = day_object['id']
+            
+            # Get active periods for this day
+            day_active_periods = active_periods_by_day[day_str]
             
             # Initialize tracking variables for this day
             current_state = None
@@ -487,12 +507,92 @@ class LocationEventManager:
             
             merged_segments.append(current)
             i = j
+
+        # Sort merged segments by start time
+        merged_segments.sort(key=lambda x: x['start_time'])
         
-        # Create events and objects only for the final merged segments
+        # Create invalid segments for gaps, but only within active sensor periods
+        filled_segments = []
+        for i in range(len(merged_segments)):
+            current = merged_segments[i]
+            current_day = current['start_time'].strftime('%Y-%m-%d')
+            day_active_periods = active_periods_by_day[current_day]
+            
+            # If this is not the first segment, check for gap with previous segment
+            if i > 0:
+                prev = merged_segments[i-1]
+                if current['start_time'] > prev['end_time']:
+                    # Check each active period that could contain this gap
+                    for period_start, period_end in day_active_periods:
+                        gap_start = max(prev['end_time'], period_start)
+                        gap_end = min(current['start_time'], period_end)
+                        if gap_start < gap_end:  # Only create if there's an actual gap within active period
+                            gap_segment = {
+                                'location_type': 'invalid',
+                                'start_time': gap_start,
+                                'end_time': gap_end,
+                                'start_event': prev['end_event'],
+                                'end_event': current['start_event'],
+                                'day_id': current['day_id']
+                            }
+                            filled_segments.append(gap_segment)
+            
+            filled_segments.append(current)
+            
+            # If this is the last segment of the day, check for gap until end of last active period
+            if i == len(merged_segments) - 1 or merged_segments[i+1]['start_time'].strftime('%Y-%m-%d') != current_day:
+                # Find the last active period of the day
+                last_period = day_active_periods[-1]
+                if current['end_time'] < last_period[1]:
+                    # Create invalid segment for the remaining time in the active period
+                    gap_segment = {
+                        'location_type': 'invalid',
+                        'start_time': current['end_time'],
+                        'end_time': last_period[1],
+                        'start_event': current['end_event'],
+                        'end_event': current['end_event'],  # Reuse the last event
+                        'day_id': current['day_id']
+                    }
+                    filled_segments.append(gap_segment)
+        
+        # Also check for gaps at start of each active period
+        current_day = None
+        for segment in filled_segments:
+            segment_day = segment['start_time'].strftime('%Y-%m-%d')
+            if segment_day != current_day:
+                current_day = segment_day
+                day_active_periods = active_periods_by_day[segment_day]
+                # Check each active period before the first segment of the day
+                for period_start, period_end in day_active_periods:
+                    if period_end <= segment['start_time']:
+                        # This period is before the first segment, create invalid segment
+                        gap_segment = {
+                            'location_type': 'invalid',
+                            'start_time': period_start,
+                            'end_time': period_end,
+                            'start_event': segment['start_event'],
+                            'end_event': segment['start_event'],
+                            'day_id': segment['day_id']
+                        }
+                        filled_segments.insert(0, gap_segment)
+                    elif period_start < segment['start_time']:
+                        # This period overlaps with the first segment, create invalid segment for the overlap
+                        gap_segment = {
+                            'location_type': 'invalid',
+                            'start_time': period_start,
+                            'end_time': segment['start_time'],
+                            'start_event': segment['start_event'],
+                            'end_event': segment['start_event'],
+                            'day_id': segment['day_id']
+                        }
+                        filled_segments.insert(0, gap_segment)
+                        break  # Only need to handle the first overlapping period
+        
+        # Create events and objects only for the final filled segments
         location_events = []
         location_objects = {}
         
-        for segment in merged_segments:
+        for segment in filled_segments:
             # Create enter event
             enter_event_id = str(uuid.uuid4())
             enter_event, day_id = self._create_location_event(
@@ -809,3 +909,685 @@ class LocationEventManager:
         print(f"Coverage: {(events_with_location/len(pa_events))*100:.1f}%")
         
         return extended_data
+
+    def relate_notifications_to_locations(
+        self,
+        extended_data: Dict[str, Any],
+        notification_event_type: str = "notification_event",  # Type of notification events
+        notification_object_type: str = "notification"  # Type of notification objects
+    ) -> Dict[str, Any]:
+        """
+        Add relationships from notification events and objects to overlapping location segments.
+        For each notification event, finds the location segment that contains its timestamp and adds
+        a relationship to the notification event. Then, for each notification object, finds all
+        location segments that overlap with its events and adds relationships.
+        
+        Args:
+            extended_data (Dict[str, Any]): The OCED data dictionary containing all objects and events
+            notification_event_type (str): The type of notification events to process
+            notification_object_type (str): The type of notification objects to process
+            
+        Returns:
+            Dict[str, Any]: Updated extended data with new relationships in notification events and objects
+        """
+        # First, relate notification events to locations
+        extended_data = self._relate_notification_events_to_locations(
+            extended_data, 
+            notification_event_type
+        )
+        
+        # Then, relate notification objects to locations based on their events
+        extended_data = self._relate_notification_objects_to_locations(
+            extended_data,
+            notification_object_type
+        )
+        
+        return extended_data
+
+    def _relate_notification_events_to_locations(
+        self,
+        extended_data: Dict[str, Any],
+        notification_event_type: str
+    ) -> Dict[str, Any]:
+        """
+        Helper method to add relationships from notification events to overlapping location segments.
+        Uses the event timestamp to find the containing location segment.
+        """
+        # Get all location segment objects
+        location_segments = [
+            obj for obj in extended_data.get('objects', [])
+            if obj['type'] == 'location_segment'
+        ]
+        
+        # Get all notification events
+        notification_events = [
+            event for event in extended_data.get('behaviorEvents', [])
+            if event['behaviorEventType'] == notification_event_type
+        ]
+        
+        # For each notification event, find the containing location segment
+        for notification_event in notification_events:
+            # Get notification event timestamp
+            try:
+                event_time = datetime.fromisoformat(notification_event['time'].replace('Z', '+00:00'))
+            except (ValueError, KeyError):
+                print(f"Warning: Notification event {notification_event['id']} has invalid time format, skipping...")
+                continue
+            
+            # Find the location segment that contains this timestamp
+            for loc_segment in location_segments:
+                # Get location segment start and end times
+                try:
+                    loc_start_time = datetime.fromisoformat(
+                        next(attr['value'] for attr in loc_segment['attributes'] 
+                             if attr['name'] == 'start_time').replace('Z', '+00:00'))
+                    loc_end_time = datetime.fromisoformat(
+                        next(attr['value'] for attr in loc_segment['attributes'] 
+                             if attr['name'] == 'end_time').replace('Z', '+00:00'))
+                except (ValueError, KeyError, StopIteration):
+                    print(f"Warning: Location segment {loc_segment['id']} missing start or end time, skipping...")
+                    continue
+                
+                # Check if notification event timestamp falls within this location segment
+                if loc_start_time <= event_time <= loc_end_time:
+                    # Add relationship to notification event
+                    if 'relationships' not in notification_event:
+                        notification_event['relationships'] = []
+                    
+                    # Check if relationship already exists
+                    if not any(
+                        rel['type'] == 'object' and 
+                        rel['id'] == loc_segment['id'] and 
+                        rel['qualifier'] == 'occurred_in_location'
+                        for rel in notification_event['relationships']
+                    ):
+                        notification_event['relationships'].append({
+                            'type': 'object',
+                            'id': loc_segment['id'],
+                            'qualifier': 'occurred_in_location'
+                        })
+                    break  # Found the containing segment, no need to check others
+        
+        # Print statistics for events
+        total_notifications = len(notification_events)
+        notifications_with_locations = sum(
+            1 for event in notification_events
+            if any(rel['qualifier'] == 'occurred_in_location' 
+                   for rel in event.get('relationships', []))
+        )
+        
+        print(f"\nNotification event to location relationship statistics:")
+        print(f"Total notification events: {total_notifications}")
+        print(f"Events with location relationships: {notifications_with_locations}")
+        print(f"Events without location relationships: {total_notifications - notifications_with_locations}")
+        print(f"Coverage: {(notifications_with_locations/total_notifications)*100:.1f}%")
+        
+        return extended_data
+
+    def _relate_notification_objects_to_locations(
+        self,
+        extended_data: Dict[str, Any],
+        notification_object_type: str
+    ) -> Dict[str, Any]:
+        """Helper method to relate notification objects to location segments based on their events.
+        
+        For each notification object:
+        1. Find all its related events
+        2. If multiple events: find location segments between first and last event
+        3. If single event: find the overlapping location segment
+        4. Add relationships on the notification object side
+        
+        Args:
+            extended_data: Dictionary containing all objects and events
+            notification_object_type: Type of notification objects to process
+        """
+        # Get all notification objects and events
+        notification_objects = [obj for obj in extended_data.get('objects', [])
+                              if obj['type'] == notification_object_type]
+        notification_events = [event for event in extended_data.get('behaviorEvents', [])
+                             if event['behaviorEventType'] == 'notification']
+        
+        # Get all location segments for time range lookup
+        location_segments = [obj for obj in extended_data.get('objects', [])
+                           if obj['type'] == 'location_segment']
+        
+        # Create a mapping of notification objects to their events
+        object_to_events = {}
+        for event in notification_events:
+            # Find the "notifies" relationship to get the object ID
+            notifies_rels = [rel for rel in event.get('relationships', [])
+                           if rel['qualifier'] == 'notifies']
+            if notifies_rels:
+                object_id = notifies_rels[0]['id']
+                if object_id not in object_to_events:
+                    object_to_events[object_id] = []
+                object_to_events[object_id].append(event)
+        
+        # Process each notification object
+        for notif_obj in notification_objects:
+            # Get all events associated with this object
+            associated_events = object_to_events.get(notif_obj['id'], [])
+            
+            if not associated_events:
+                print(f"Warning: Notification object {notif_obj['id']} has no associated events, skipping...")
+                continue
+            
+            # Sort events by time
+            associated_events.sort(key=lambda x: datetime.fromisoformat(x['time'].replace('Z', '+00:00')))
+            
+            # Get the time range for this notification
+            try:
+                first_event_time = datetime.fromisoformat(associated_events[0]['time'].replace('Z', '+00:00'))
+                last_event_time = datetime.fromisoformat(associated_events[-1]['time'].replace('Z', '+00:00'))
+            except (ValueError, KeyError):
+                print(f"Warning: Invalid time format in notification events for object {notif_obj['id']}, skipping...")
+                continue
+            
+            # Find all location segments that overlap with this time range
+            overlapping_segments = []
+            for segment in location_segments:
+                # Get segment start and end times
+                try:
+                    seg_start = datetime.fromisoformat(
+                        next(attr['value'] for attr in segment['attributes'] 
+                             if attr['name'] == 'start_time').replace('Z', '+00:00'))
+                    seg_end = datetime.fromisoformat(
+                        next(attr['value'] for attr in segment['attributes'] 
+                             if attr['name'] == 'end_time').replace('Z', '+00:00'))
+                except (ValueError, KeyError, StopIteration):
+                    print(f"Warning: Invalid time format in location segment {segment['id']}, skipping...")
+                    continue
+                
+                # Check if the segment overlaps with the notification time range
+                if (seg_start <= last_event_time and seg_end >= first_event_time):
+                    overlapping_segments.append(segment)
+            
+            # Add relationships to all overlapping segments
+            for segment in overlapping_segments:
+                # Add relationship from notification object to location segment
+                if 'relationships' not in notif_obj:
+                    notif_obj['relationships'] = []
+                # Check if relationship already exists
+                if not any(rel['type'] == 'object' and 
+                          rel['id'] == segment['id'] and 
+                          rel['qualifier'] == 'overlaps_with_location'
+                          for rel in notif_obj['relationships']):
+                    notif_obj['relationships'].append({
+                        'type': 'object',
+                        'id': segment['id'],
+                        'qualifier': 'overlaps_with_location'
+                    })
+            
+            print(f"Notification object {notif_obj['id']} overlaps with {len(overlapping_segments)} location segments")
+            print(f"  Time range: {first_event_time} to {last_event_time}")
+            print(f"  Number of associated events: {len(associated_events)}")
+        
+        # Print statistics
+        total_objects = len(notification_objects)
+        objects_with_locations = sum(
+            1 for obj in notification_objects
+            if any(rel['qualifier'] == 'overlaps_with_location' 
+                   for rel in obj.get('relationships', []))
+        )
+        
+        print(f"\nNotification Object to Location Relationship Statistics:")
+        print(f"Total notification objects: {total_objects}")
+        print(f"Objects with location relationships: {objects_with_locations}")
+        print(f"Objects without location relationships: {total_objects - objects_with_locations}")
+        print(f"Coverage: {(objects_with_locations/total_objects)*100:.1f}%")
+        
+        return extended_data
+
+    def add_location_attribute_to_notification_events(
+        self,
+        extended_data: Dict[str, Any],
+        notification_event_type: str = "notification"  # Type of notification events
+    ) -> Dict[str, Any]:
+        """
+        Add location attributes to notification events based on their associated location segments.
+        First adds the location attribute type to the behavior event type, then adds the attribute
+        to each event with the location type from its associated location segment.
+        
+        Args:
+            extended_data (Dict[str, Any]): The OCED data dictionary containing all objects and events
+            notification_event_type (str): The type of notification events to process
+            
+        Returns:
+            Dict[str, Any]: Updated extended data with location attributes added to notification events
+        """
+        # First, add the location attribute to the behavior event type if it doesn't exist
+        event_type = next(
+            (et for et in extended_data.get('behaviorEventTypes', [])
+             if et['name'] == notification_event_type),
+            None
+        )
+        
+        if event_type is None:
+            print(f"Warning: Behavior event type {notification_event_type} not found")
+            return extended_data
+        
+        # Add location attribute to event type if it doesn't exist
+        if not any(attr['name'] == 'location' for attr in event_type.get('behaviorEventTypeAttributes', [])):
+            if 'behaviorEventTypeAttributes' not in event_type:
+                event_type['behaviorEventTypeAttributes'] = []
+            event_type['behaviorEventTypeAttributes'].append({
+                "name": "location",
+                "type": "string"
+            })
+            print(f"Added location attribute to {notification_event_type} event type")
+        
+        # Get all notification events
+        notification_events = [
+            event for event in extended_data.get('behaviorEvents', [])
+            if event['behaviorEventType'] == notification_event_type
+        ]
+        
+        # Get all location segments for quick lookup
+        location_segments = {
+            obj['id']: obj for obj in extended_data.get('objects', [])
+            if obj['type'] == 'location_segment'
+        }
+        
+        # Add location attribute to each event
+        for event in notification_events:
+            # Find the location segment this event occurred in
+            location_rel = next(
+                (rel for rel in event.get('relationships', [])
+                 if rel['type'] == 'object' and 
+                 rel['qualifier'] == 'occurred_in_location' and
+                 rel['id'] in location_segments),
+                None
+            )
+            
+            if location_rel:
+                # Get the location type from the segment
+                loc_segment = location_segments[location_rel['id']]
+                location_type = next(
+                    (attr['value'] for attr in loc_segment['attributes']
+                     if attr['name'] == 'location_type'),
+                    None
+                )
+                
+                if location_type:
+                    # Add or update the location attribute
+                    if 'behaviorEventTypeAttributes' not in event:
+                        event['behaviorEventTypeAttributes'] = []
+                    
+                    # Remove existing location attribute if it exists
+                    event['behaviorEventTypeAttributes'] = [
+                        attr for attr in event['behaviorEventTypeAttributes']
+                        if attr['name'] != 'location'
+                    ]
+                    
+                    # Add new location attribute (without time field)
+                    event['behaviorEventTypeAttributes'].append({
+                        "name": "location",
+                        "value": location_type
+                    })
+        
+        # Print statistics
+        events_with_location = sum(
+            1 for event in notification_events
+            if any(attr['name'] == 'location' for attr in event.get('behaviorEventTypeAttributes', []))
+        )
+        
+        print(f"\nLocation attribute statistics for notification events:")
+        print(f"Total notification events: {len(notification_events)}")
+        print(f"Events with location attribute: {events_with_location}")
+        print(f"Events without location attribute: {len(notification_events) - events_with_location}")
+        print(f"Coverage: {(events_with_location/len(notification_events))*100:.1f}%")
+        
+        return extended_data
+
+    def relate_mood_events_to_locations(
+        self,
+        extended_data: Dict[str, Any],
+        mood_event_type: str = "mood"  # Type of mood events
+    ) -> Dict[str, Any]:
+        """
+        Add relationships from mood events to overlapping location segments and add location attributes.
+        For each mood event, finds the location segment that contains its timestamp and adds
+        a relationship and location attribute.
+        
+        Args:
+            extended_data (Dict[str, Any]): The OCED data dictionary containing all objects and events
+            mood_event_type (str): The type of mood events to process
+            
+        Returns:
+            Dict[str, Any]: Updated extended data with new relationships and attributes in mood events
+        """
+        # First, relate mood events to locations
+        extended_data = self._relate_mood_events_to_locations(
+            extended_data, 
+            mood_event_type
+        )
+        
+        # Then, add location attributes to the events
+        extended_data = self.add_location_attribute_to_mood_events(
+            extended_data,
+            mood_event_type
+        )
+        
+        return extended_data
+
+    def _relate_mood_events_to_locations(
+        self,
+        extended_data: Dict[str, Any],
+        mood_event_type: str
+    ) -> Dict[str, Any]:
+        """
+        Helper method to add relationships from mood events to overlapping location segments.
+        Uses the event timestamp to find the containing location segment.
+        """
+        # Get all location segment objects
+        location_segments = [
+            obj for obj in extended_data.get('objects', [])
+            if obj['type'] == 'location_segment'
+        ]
+        
+        # Get all mood events
+        mood_events = [
+            event for event in extended_data.get('behaviorEvents', [])
+            if event['behaviorEventType'] == mood_event_type
+        ]
+        
+        # For each mood event, find the containing location segment
+        for mood_event in mood_events:
+            # Get mood event timestamp
+            try:
+                event_time = datetime.fromisoformat(mood_event['time'].replace('Z', '+00:00'))
+            except (ValueError, KeyError):
+                print(f"Warning: Mood event {mood_event['id']} has invalid time format, skipping...")
+                continue
+            
+            # Find the location segment that contains this timestamp
+            for loc_segment in location_segments:
+                # Get location segment start and end times
+                try:
+                    loc_start_time = datetime.fromisoformat(
+                        next(attr['value'] for attr in loc_segment['attributes'] 
+                             if attr['name'] == 'start_time').replace('Z', '+00:00'))
+                    loc_end_time = datetime.fromisoformat(
+                        next(attr['value'] for attr in loc_segment['attributes'] 
+                             if attr['name'] == 'end_time').replace('Z', '+00:00'))
+                except (ValueError, KeyError, StopIteration):
+                    print(f"Warning: Location segment {loc_segment['id']} missing start or end time, skipping...")
+                    continue
+                
+                # Check if mood event timestamp falls within this location segment
+                if loc_start_time <= event_time <= loc_end_time:
+                    # Add relationship to mood event
+                    if 'relationships' not in mood_event:
+                        mood_event['relationships'] = []
+                    
+                    # Check if relationship already exists
+                    if not any(
+                        rel['type'] == 'object' and 
+                        rel['id'] == loc_segment['id'] and 
+                        rel['qualifier'] == 'occurred_in_location'
+                        for rel in mood_event['relationships']
+                    ):
+                        mood_event['relationships'].append({
+                            'type': 'object',
+                            'id': loc_segment['id'],
+                            'qualifier': 'occurred_in_location'
+                        })
+                    break  # Found the containing segment, no need to check others
+        
+        # Print statistics for events
+        total_mood_events = len(mood_events)
+        mood_events_with_locations = sum(
+            1 for event in mood_events
+            if any(rel['qualifier'] == 'occurred_in_location' 
+                   for rel in event.get('relationships', []))
+        )
+        
+        print(f"\nMood event to location relationship statistics:")
+        print(f"Total mood events: {total_mood_events}")
+        print(f"Events with location relationships: {mood_events_with_locations}")
+        print(f"Events without location relationships: {total_mood_events - mood_events_with_locations}")
+        print(f"Coverage: {(mood_events_with_locations/total_mood_events)*100:.1f}%")
+        
+        return extended_data
+
+    def add_location_attribute_to_mood_events(
+        self,
+        extended_data: Dict[str, Any],
+        mood_event_type: str = "mood"  # Type of mood events
+    ) -> Dict[str, Any]:
+        """
+        Add location attributes to mood events based on their associated location segments.
+        First adds the location attribute type to the behavior event type, then adds the attribute
+        to each event with the location type from its associated location segment.
+        
+        Args:
+            extended_data (Dict[str, Any]): The OCED data dictionary containing all objects and events
+            mood_event_type (str): The type of mood events to process
+            
+        Returns:
+            Dict[str, Any]: Updated extended data with location attributes added to mood events
+        """
+        # First, add the location attribute to the behavior event type if it doesn't exist
+        event_type = next(
+            (et for et in extended_data.get('behaviorEventTypes', [])
+             if et['name'] == mood_event_type),
+            None
+        )
+        
+        if event_type is None:
+            print(f"Warning: Behavior event type {mood_event_type} not found")
+            return extended_data
+        
+        # Add location attribute to event type if it doesn't exist
+        if not any(attr['name'] == 'location' for attr in event_type.get('behaviorEventTypeAttributes', [])):
+            if 'behaviorEventTypeAttributes' not in event_type:
+                event_type['behaviorEventTypeAttributes'] = []
+            event_type['behaviorEventTypeAttributes'].append({
+                "name": "location",
+                "type": "string"
+            })
+            print(f"Added location attribute to {mood_event_type} event type")
+        
+        # Get all mood events
+        mood_events = [
+            event for event in extended_data.get('behaviorEvents', [])
+            if event['behaviorEventType'] == mood_event_type
+        ]
+        
+        # Get all location segments for quick lookup
+        location_segments = {
+            obj['id']: obj for obj in extended_data.get('objects', [])
+            if obj['type'] == 'location_segment'
+        }
+        
+        # Add location attribute to each event
+        for event in mood_events:
+            # Find the location segment this event occurred in
+            location_rel = next(
+                (rel for rel in event.get('relationships', [])
+                 if rel['type'] == 'object' and 
+                 rel['qualifier'] == 'occurred_in_location' and
+                 rel['id'] in location_segments),
+                None
+            )
+            
+            if location_rel:
+                # Get the location type from the segment
+                loc_segment = location_segments[location_rel['id']]
+                location_type = next(
+                    (attr['value'] for attr in loc_segment['attributes']
+                     if attr['name'] == 'location_type'),
+                    None
+                )
+                
+                if location_type:
+                    # Add or update the location attribute
+                    if 'behaviorEventTypeAttributes' not in event:
+                        event['behaviorEventTypeAttributes'] = []
+                    
+                    # Remove existing location attribute if it exists
+                    event['behaviorEventTypeAttributes'] = [
+                        attr for attr in event['behaviorEventTypeAttributes']
+                        if attr['name'] != 'location'
+                    ]
+                    
+                    # Add new location attribute (without time field)
+                    event['behaviorEventTypeAttributes'].append({
+                        "name": "location",
+                        "value": location_type
+                    })
+        
+        # Print statistics
+        events_with_location = sum(
+            1 for event in mood_events
+            if any(attr['name'] == 'location' for attr in event.get('behaviorEventTypeAttributes', []))
+        )
+        
+        print(f"\nLocation attribute statistics for mood events:")
+        print(f"Total mood events: {len(mood_events)}")
+        print(f"Events with location attribute: {events_with_location}")
+        print(f"Events without location attribute: {len(mood_events) - events_with_location}")
+        print(f"Coverage: {(events_with_location/len(mood_events))*100:.1f}%")
+        
+        return extended_data
+
+    def relate_stress_self_reports_to_locations(
+        self,
+        extended_data: Dict[str, Any],
+        stress_object_type: str = "stress_self_report"  # Type of stress self-report objects
+    ) -> Dict[str, Any]:
+        """
+        Add relationships from stress self-report objects to overlapping location segments.
+        For each stress self-report object, finds the location segment that contains its timestamp
+        and adds a relationship.
+        
+        Args:
+            extended_data (Dict[str, Any]): The OCED data dictionary containing all objects and events
+            stress_object_type (str): The type of stress self-report objects to process
+            
+        Returns:
+            Dict[str, Any]: Updated extended data with new relationships in stress self-report objects
+        """
+        # Get all location segment objects
+        location_segments = [
+            obj for obj in extended_data.get('objects', [])
+            if obj['type'] == 'location_segment'
+        ]
+        
+        # Get all stress self-report objects
+        stress_objects = [
+            obj for obj in extended_data.get('objects', [])
+            if obj['type'] == stress_object_type
+        ]
+        
+        # For each stress self-report object, find the containing location segment
+        for stress_obj in stress_objects:
+            # Get stress object timestamp from the time field of stress_value attribute
+            try:
+                stress_value_attr = next(
+                    attr for attr in stress_obj['attributes']
+                    if attr['name'] == 'stress_value'
+                )
+                obj_time = datetime.fromisoformat(stress_value_attr['time'].replace('Z', '+00:00'))
+            except (ValueError, KeyError, StopIteration):
+                print(f"Warning: Stress self-report object {stress_obj['id']} has invalid timestamp in stress_value attribute, skipping...")
+                continue
+            
+            # Find the location segment that contains this timestamp
+            for loc_segment in location_segments:
+                # Get location segment start and end times
+                try:
+                    loc_start_time = datetime.fromisoformat(
+                        next(attr['value'] for attr in loc_segment['attributes'] 
+                             if attr['name'] == 'start_time').replace('Z', '+00:00'))
+                    loc_end_time = datetime.fromisoformat(
+                        next(attr['value'] for attr in loc_segment['attributes'] 
+                             if attr['name'] == 'end_time').replace('Z', '+00:00'))
+                except (ValueError, KeyError, StopIteration):
+                    print(f"Warning: Location segment {loc_segment['id']} missing start or end time, skipping...")
+                    continue
+                
+                # Check if stress object timestamp falls within this location segment
+                if loc_start_time <= obj_time <= loc_end_time:
+                    # Add relationship to stress object
+                    if 'relationships' not in stress_obj:
+                        stress_obj['relationships'] = []
+                    
+                    # Check if relationship already exists
+                    if not any(
+                        rel['type'] == 'object' and 
+                        rel['id'] == loc_segment['id'] and 
+                        rel['qualifier'] == 'overlaps_with_location'
+                        for rel in stress_obj['relationships']
+                    ):
+                        stress_obj['relationships'].append({
+                            'type': 'object',
+                            'id': loc_segment['id'],
+                            'qualifier': 'overlaps_with_location'
+                        })
+                    break  # Found the containing segment, no need to check others
+        
+        # Print statistics
+        total_stress_objects = len(stress_objects)
+        stress_objects_with_locations = sum(
+            1 for obj in stress_objects
+            if any(rel['qualifier'] == 'overlaps_with_location' 
+                   for rel in obj.get('relationships', []))
+        )
+        
+        print(f"\nStress self-report to location relationship statistics:")
+        print(f"Total stress self-report objects: {total_stress_objects}")
+        print(f"Objects with location relationships: {stress_objects_with_locations}")
+        print(f"Objects without location relationships: {total_stress_objects - stress_objects_with_locations}")
+        print(f"Coverage: {(stress_objects_with_locations/total_stress_objects)*100:.1f}%")
+        
+        return extended_data
+
+    def save_extended_data(self, filename: str, extended_data: Dict[str, Any], compress: bool = False) -> None:
+        """
+        Save the extended OCED data to a JSON file in the data/transformed directory.
+        Uses orjson for fast JSON serialization.
+        
+        Args:
+            filename (str): Name of the file to save (e.g., 'location_segments.json')
+            extended_data (Dict[str, Any]): The extended OCED data dictionary containing location objects
+            compress (bool): Whether to compress the output file (default: False)
+        """
+        # Get the project root directory
+        project_root = Path(__file__).parent.parent.parent
+        
+        # Construct the full path to the data/transformed directory
+        output_dir = project_root / 'data' / 'transformed'
+        output_path = output_dir / filename
+        
+        # Create directory if it doesn't exist
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Print summary of data to be saved
+        location_objects = [obj for obj in extended_data.get('objects', []) 
+                          if obj['type'] == 'location_segment']
+        location_events = [event for event in extended_data.get('behaviorEvents', [])
+                         if event['behaviorEventType'] == 'location_event']
+        
+        print(f"\nSaving extended data with:")
+        print(f"- {len(location_objects)} location segment objects")
+        print(f"- {len(location_events)} location events ({len(location_events)//2} segments)")
+        print(f"- {len(extended_data.get('objects', []))} total objects")
+        print(f"- {len(extended_data.get('behaviorEvents', []))} total behavior events")
+        
+        # Serialize to JSON bytes using orjson
+        json_bytes = orjson.dumps(
+            extended_data,
+            option=orjson.OPT_INDENT_2
+        )
+        
+        if compress:
+            import gzip
+            output_path = output_path.with_suffix('.json.gz')
+            with gzip.open(output_path, 'wb') as f:
+                f.write(json_bytes)
+        else:
+            with open(output_path, 'wb') as f:
+                f.write(json_bytes)
+        
+        print(f"Saved extended data to: {output_path}")
