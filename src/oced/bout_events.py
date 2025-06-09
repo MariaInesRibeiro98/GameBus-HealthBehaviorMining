@@ -70,8 +70,8 @@ class BoutEventManager:
         Args:
             bout_id (str): Unique identifier for the bout
             bout_type (str): Type of physical activity bout (LIGHT_PA or MODERATE-VIGOROUS_PA)
-            start_time (pd.Timestamp): Start time of the bout (used for attribute timestamp)
-            end_time (pd.Timestamp): End time of the bout (used for attribute timestamp)
+            start_time (pd.Timestamp): Start time of the bout
+            end_time (pd.Timestamp): End time of the bout
             extended_data (Dict[str, Any]): The OCED data dictionary
             
         Returns:
@@ -81,7 +81,7 @@ class BoutEventManager:
         if 'objects' not in extended_data:
             extended_data['objects'] = []
         
-        # Create bout object
+        # Create bout object with both start and end times
         bout_object = {
             "id": bout_id,
             "type": "physical_activity_bout",
@@ -90,6 +90,16 @@ class BoutEventManager:
                     "name": "bout_type",
                     "value": bout_type,
                     "time": start_time.isoformat()
+                },
+                {
+                    "name": "start_time",
+                    "value": start_time.isoformat(),
+                    "time": start_time.isoformat()
+                },
+                {
+                    "name": "end_time",
+                    "value": end_time.isoformat(),
+                    "time": end_time.isoformat()
                 }
             ],
             "relationships": []
@@ -165,7 +175,8 @@ class BoutEventManager:
         bout_df: pd.DataFrame,
         user_id: str,
         bout_type: str,
-        time_column: str = 'window_start'
+        time_column: str = 'window_start',
+        end_time_column: str = 'window_end'
     ) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
         """
         Create physical activity bout events and objects from the bout detection DataFrame.
@@ -176,7 +187,8 @@ class BoutEventManager:
             bout_df (pd.DataFrame): DataFrame containing bout detection results (all bouts of the same type)
             user_id (str): ID of the user object to relate events to
             bout_type (str): Type of physical activity bout ('LIGHT_PA' or 'MODERATE-VIGOROUS_PA')
-            time_column (str): Name of the column containing timestamps
+            time_column (str): Name of the column containing start timestamps
+            end_time_column (str): Name of the column containing end timestamps
             
         Returns:
             Tuple[Dict[str, Any], List[Dict[str, Any]]]: 
@@ -253,7 +265,7 @@ class BoutEventManager:
             
             # Get bout start and end times
             start_time = pd.to_datetime(bout_data[time_column].min())
-            end_time = pd.to_datetime(bout_data[time_column].max()) + pd.Timedelta(minutes=1)  # Add epoch duration
+            end_time = pd.to_datetime(bout_data[end_time_column].max())  # Use actual end time from data
             
             # Check if this bout already exists
             existing_bout = bout_exists(start_time, end_time, bout_type)

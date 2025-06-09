@@ -71,7 +71,7 @@ class LocationEventManager:
             "id": event_id,
             "behaviorEventType": "location_event",
             "time": timestamp.isoformat(),
-            "attributes": [
+            "behaviorEventTypeAttributes": [
                 {
                     "name": "lifecycle",
                     "value": lifecycle
