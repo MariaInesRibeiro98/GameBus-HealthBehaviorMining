@@ -169,17 +169,30 @@ class DataAwareProcessMining:
         from sklearn.preprocessing import LabelEncoder
         import numpy as np
         
-        # Create label encoders for each categorical attribute
-        attribute_encoders = {attr: LabelEncoder() for attr in attributes}
+        # First, collect all unique values for each attribute
+        attribute_values = {attr: set() for attr in attributes}
+        for data in trace_data:
+            for attr in attributes:
+                value = str(data[attr])  # Convert to string to handle any type
+                attribute_values[attr].add(value)
         
-        # Prepare feature matrix X
+        # Create and fit label encoders for each attribute
+        attribute_encoders = {}
+        for attr in attributes:
+            encoder = LabelEncoder()
+            # Fit on all unique values for this attribute
+            encoder.fit(list(attribute_values[attr]))
+            attribute_encoders[attr] = encoder
+            print(f"\nUnique values for {attr}: {sorted(attribute_values[attr])}")
+        
+        # Now prepare feature matrix X using the fitted encoders
         X = []
         for data in trace_data:
             features = []
             for attr in attributes:
-                value = str(data[attr])  # Convert to string to handle any type
-                # Fit and transform the value
-                encoded_value = attribute_encoders[attr].fit_transform([value])[0]
+                value = str(data[attr])
+                # Transform using the pre-fitted encoder
+                encoded_value = attribute_encoders[attr].transform([value])[0]
                 features.append(encoded_value)
             X.append(features)
         X = np.array(X)
@@ -202,15 +215,17 @@ class DataAwareProcessMining:
         print(f"Number of samples: {len(X)}")
         print(f"Number of features: {len(attributes)}")
         print(f"Number of classes: {len(transition_encoder.classes_)}")
-
-        print("X:")
-        print(X)
-
-        print("y:")
-        print(y)
-
-        print("attributes:")
-        print(attributes)
+        
+        print("\nFeature vectors (X):")
+        for i, features in enumerate(X):
+            print(f"Sample {i}:")
+            for attr, value in zip(attributes, features):
+                original_value = attribute_encoders[attr].inverse_transform([value])[0]
+                print(f"  {attr}: {original_value} -> {value}")
+        
+        print("\nTarget values (y):")
+        for i, (label, encoded) in enumerate(zip(transition_labels, y)):
+            print(f"Sample {i}: {label} -> {encoded}")
         
         # Print encoding information for each attribute
         print("\nAttribute encodings:")
@@ -368,43 +383,68 @@ class DataAwareProcessMining:
             
         return self.decision_trees[place_name]['feature_importances']
     
-    def predict_transition(self, 
-                         place_name: str, 
-                         attribute_values: Dict[str, Any]) -> str:
+    def predict_transition(self, place_name: str, state: Dict[str, Any]) -> str:
         """
-        Predict which transition will be taken at a choice point based on attribute values.
-
+        Predict which transition will be taken at a choice point given the current state.
+        
         Args:
-            place_name (str): Name of the place (choice point)
-            attribute_values (Dict[str, Any]): Dictionary mapping attribute names to their values
-
+            place_name: Name of the place (choice point)
+            state: Dictionary of attribute values representing the current state
+            
         Returns:
-            str: Name of the predicted transition
+            Predicted transition label
         """
         if place_name not in self.decision_trees:
-            raise ValueError(f"No decision tree found for place '{place_name}'")
+            print(f"Error: No decision tree found for place {place_name}")
+            return None
             
         tree_info = self.decision_trees[place_name]
-        model = tree_info['model']
+        clf = tree_info['classifier']
+        attribute_encoders = tree_info['attribute_encoders']
+        transition_encoder = tree_info['transition_encoder']
         attributes = tree_info['attributes']
-        label_encoders = tree_info['label_encoders']
-        transition_names = tree_info['transition_names']
         
-        # Prepare the input features
-        X = []
+        # Prepare the feature vector
+        features = []
         for attr in attributes:
-            value = attribute_values.get(attr)
-            if value is None:
-                raise ValueError(f"Missing value for attribute '{attr}'")
+            if attr not in state:
+                print(f"Warning: Missing attribute '{attr}' in state")
+                return None
                 
-            # Encode categorical values if needed
-            if attr in label_encoders:
-                value = label_encoders[attr].transform([value])[0]
-            X.append(value)
+            value = str(state[attr])  # Convert to string to handle any type
+            
+            # Check if the value is in the encoder's classes
+            if value not in attribute_encoders[attr].classes_:
+                print(f"Warning: Unknown value '{value}' for attribute '{attr}'")
+                print(f"Known values for {attr}: {list(attribute_encoders[attr].classes_)}")
+                return None
+                
+            # Transform the value using the stored encoder
+            encoded_value = attribute_encoders[attr].transform([value])[0]
+            features.append(encoded_value)
             
         # Make prediction
-        prediction = model.predict([X])[0]
-        return transition_names[prediction]
+        X = np.array([features])
+        prediction = clf.predict(X)[0]
+        
+        # Convert prediction back to transition label
+        predicted_label = transition_encoder.inverse_transform([prediction])[0]
+        
+        # Get prediction probabilities
+        probabilities = clf.predict_proba(X)[0]
+        prob_dict = {label: prob for label, prob in zip(transition_encoder.classes_, probabilities)}
+        
+        print("\nPrediction details:")
+        print(f"Input state: {state}")
+        print("Encoded features:")
+        for attr, value in zip(attributes, features):
+            print(f"  {attr}: {state[attr]} -> {value}")
+        print(f"\nPredicted transition: {predicted_label}")
+        print("Transition probabilities:")
+        for label, prob in prob_dict.items():
+            print(f"  {label}: {prob:.3f}")
+            
+        return predicted_label
 
     def _find_traces_for_choice_point(self, 
                                     place_name: str, 
