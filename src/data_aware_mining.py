@@ -467,6 +467,7 @@ class DataAwareProcessMining:
             if place.name == place_name:
                 target_place = place
                 break
+        
                 
         if target_place is None:
             raise ValueError(f"Place '{place_name}' not found")
@@ -481,6 +482,7 @@ class DataAwareProcessMining:
             print(f"  Transition: {trans.name}")
             print(f"    Label: {label}")
             outgoing_transitions[label] = trans
+        
             
         print("\nTransitions that can be taken from this place (by label):")
         for label, trans in outgoing_transitions.items():
@@ -504,6 +506,7 @@ class DataAwareProcessMining:
                 # Check if this event matches any of our transition labels
                 if event_name in outgoing_transitions:
                     trans = outgoing_transitions[event_name]
+                    print(trans.name)
                     print(f"    Found a transition from our place: {trans.name} (label: {event_name})")
                     
                     # Get the state (attributes) at this point

@@ -1,0 +1,175 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "sensorEventTypes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "attributes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string" },
+                                "type": { "type": "string" }
+                            },
+                            "required": ["name", "type"]
+                        }
+                    }
+                },
+                "required": ["name", "attributes"]
+            }
+        },
+        "behaviorEventTypes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "attributes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string" },
+                                "type": { "type": "string" }
+                            },
+                            "required": ["name", "type"]
+                        }
+                    }
+                },
+                "required": ["name", "attributes"]
+            }
+        },
+        "objectTypes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "attributes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string" },
+                                "type": { "type": "string" }
+                            },
+                            "required": ["name", "type"]
+                        }
+                    }
+                },
+                "required": ["name", "attributes"]
+            }
+        },
+        "sensorEvents": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "sensorEventType": { "type": "string" },
+                    "time": { "type": "string", "format": "date-time" },
+                    "sensorEventTypeAttributes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string" },
+                                "value": { "type": [ "string", "number" ] }
+                            },    
+                            "required": ["name", "value"]
+                        }
+                    },
+                    "relationships": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string" },
+                                "type": {"type": "string", "enum": ["behaviorEvent", "object"]},
+                                "qualifier": { "type": "string" }
+                            },
+                            "required": ["id", "type", "qualifier"]
+                        }
+                    }
+                },
+                "required": ["id", "sensorEventType", "time"]
+            }
+        },
+        "behaviorEvents": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "behaviorEventType": { "type": "string" },
+                    "time": { "type": "string", "format": "date-time" },
+                    "behaviorEventTypeAttributes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string" },
+                                "value": { "type": [ "string", "number" ] }
+                            },
+                            "required": ["name", "value"]
+                        }
+                    },
+                    "relationships": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string" },
+                                "type": { "type": "string", "enum": ["object"]},
+                                "qualifier": { "type": "string" }
+                            },
+                            "required": ["id", "type", "qualifier"]
+                        }
+                    }
+                },
+                "required": ["id", "behaviorEventType", "time"]
+            }
+        },
+        "objects": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "type": { "type": "string" },
+                    "relationships": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string" },
+                                "type": { "type": "string", "enum": ["object", "behaviorEvent"] },
+                                "qualifier": { "type": "string" }
+                            },
+                            "required": ["id", "type", "qualifier"]
+                        }
+                    },
+                    "attributes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string" },
+                                "value": { "type": [ "string", "number" ] },
+                                "time": { "type": "string", "format": "date-time" }
+                            },
+                            "required": ["name", "value", "time"]
+                        }
+                    }
+                },
+                "required": ["id", "type"]
+            }
+        }
+    },
+    "required": ["sensorEventTypes", "behaviorEventTypes", "objectTypes", "sensorEvents", "behaviorEvents", "objects"]
+} 

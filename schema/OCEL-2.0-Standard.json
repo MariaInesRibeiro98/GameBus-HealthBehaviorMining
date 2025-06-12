@@ -2,28 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
-        "sensorEventTypes": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "name": { "type": "string" },
-                    "attributes": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "name": { "type": "string" },
-                                "type": { "type": "string" }
-                            },
-                            "required": ["name", "type"]
-                        }
-                    }
-                },
-                "required": ["name", "attributes"]
-            }
-        },
-        "behaviorEventTypes": {
+        "eventTypes": {
             "type": "array",
             "items": {
                 "type": "object",
@@ -65,56 +44,21 @@
                 "required": ["name", "attributes"]
             }
         },
-        "sensorEvents": {
+        "events": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "sensorEventType": { "type": "string" },
+                    "type": { "type": "string" },
                     "time": { "type": "string", "format": "date-time" },
-                    "sensorEventTypeAttributes": {
+                    "attributes": {
                         "type": "array",
                         "items": {
                             "type": "object",
                             "properties": {
                                 "name": { "type": "string" },
-                                "value": { "type": [ "string", "number" ] }
-                            },    
-                            "required": ["name", "value"]
-                        }
-                    },
-                    "relationships": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "id": { "type": "string" },
-                                "type": {"type": "string", "enum": ["behaviorEvent", "object"]},
-                                "qualifier": { "type": "string" }
-                            },
-                            "required": ["id", "type", "qualifier"]
-                        }
-                    }
-                },
-                "required": ["id", "sensorEventType", "time"]
-            }
-        },
-        "behaviorEvents": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "id": { "type": "string" },
-                    "behaviorEventType": { "type": "string" },
-                    "time": { "type": "string", "format": "date-time" },
-                    "behaviorEventTypeAttributes": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "name": { "type": "string" },
-                                "value": { "type": [ "string", "number" ] }
+                                "value": { "type": "string" }
                             },
                             "required": ["name", "value"]
                         }
@@ -124,15 +68,14 @@
                         "items": {
                             "type": "object",
                             "properties": {
-                                "id": { "type": "string" },
-                                "type": { "type": "string", "enum": ["object"]},
+                                "objectId": { "type": "string" },
                                 "qualifier": { "type": "string" }
                             },
-                            "required": ["id", "type", "qualifier"]
+                            "required": ["objectId", "qualifier"]
                         }
                     }
                 },
-                "required": ["id", "behaviorEventType", "time"]
+                "required": ["id", "type", "time"]
             }
         },
         "objects": {
@@ -147,11 +90,10 @@
                         "items": {
                             "type": "object",
                             "properties": {
-                                "id": { "type": "string" },
-                                "type": { "type": "string", "enum": ["object"] },
+                                "objectId": { "type": "string" },
                                 "qualifier": { "type": "string" }
                             },
-                            "required": ["id", "type", "qualifier"]
+                            "required": ["objectId", "qualifier"]
                         }
                     },
                     "attributes": {
@@ -160,7 +102,7 @@
                             "type": "object",
                             "properties": {
                                 "name": { "type": "string" },
-                                "value": { "type": [ "string", "number" ] },
+                                "value": { "type": "string" },
                                 "time": { "type": "string", "format": "date-time" }
                             },
                             "required": ["name", "value", "time"]
@@ -171,5 +113,5 @@
             }
         }
     },
-    "required": ["sensorEventTypes", "behaviorEventTypes", "objectTypes", "sensorEvents", "behaviorEvents", "objects"]
-} 
+    "required": ["eventTypes", "objectTypes", "events", "objects"]
+}
