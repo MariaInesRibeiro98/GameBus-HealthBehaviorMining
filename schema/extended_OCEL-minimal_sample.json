@@ -1,0 +1,838 @@
+{
+  "sensorEventTypes": [
+    {
+      "name": "accelerometer",
+      "attributes": [
+        {
+          "name": "x",
+          "type": "number"
+        },
+        {
+          "name": "y",
+          "type": "number"
+        },
+        {
+          "name": "z",
+          "type": "number"
+        },
+        {
+          "name": "activity_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "activity_type",
+      "attributes": [
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "speed",
+          "type": "number"
+        },
+        {
+          "name": "steps",
+          "type": "number"
+        },
+        {
+          "name": "walks",
+          "type": "number"
+        },
+        {
+          "name": "runs",
+          "type": "number"
+        },
+        {
+          "name": "freq",
+          "type": "number"
+        },
+        {
+          "name": "distance",
+          "type": "number"
+        },
+        {
+          "name": "calories",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "heartrate",
+      "attributes": [
+        {
+          "name": "bpm",
+          "type": "number"
+        },
+        {
+          "name": "pp",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "location",
+      "attributes": [
+        {
+          "name": "latitude",
+          "type": "number"
+        },
+        {
+          "name": "longitude",
+          "type": "number"
+        },
+        {
+          "name": "altitude",
+          "type": "number"
+        },
+        {
+          "name": "speed",
+          "type": "number"
+        },
+        {
+          "name": "error",
+          "type": "number"
+        }
+      ]
+    }
+  ],
+  "behaviorEventTypes": [
+    {
+      "name": "mood",
+      "attributes": [
+        {
+          "name": "valence",
+          "type": "number"
+        },
+        {
+          "name": "arousal",
+          "type": "number"
+        },
+        {
+          "name": "stress",
+          "type": "number"
+        }
+      ],
+      "behaviorEventTypeAttributes": [
+        {
+          "name": "location",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "notification",
+      "attributes": [
+        {
+          "name": "action",
+          "type": "string"
+        }
+      ],
+      "behaviorEventTypeAttributes": [
+        {
+          "name": "location",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "physical_activity_bout",
+      "attributes": [
+        {
+          "name": "lifecycle",
+          "type": "string"
+        },
+        {
+          "name": "bout_type",
+          "type": "string"
+        }
+      ],
+      "behaviorEventTypeAttributes": [
+        {
+          "name": "location",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "location_event",
+      "attributes": [
+        {
+          "name": "lifecycle",
+          "type": "string"
+        },
+        {
+          "name": "location_type",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "objectTypes": [
+    {
+      "name": "player",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "intervention",
+      "attributes": [
+        {
+          "name": "goal",
+          "type": "string"
+        },
+        {
+          "name": "start_date",
+          "type": "string"
+        },
+        {
+          "name": "end_date",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "day",
+      "attributes": [
+        {
+          "name": "date",
+          "type": "string"
+        },
+        {
+          "name": "day_of_week",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "week",
+      "attributes": [
+        {
+          "name": "week_start_date",
+          "type": "string"
+        },
+        {
+          "name": "week_number",
+          "type": "integer"
+        },
+        {
+          "name": "year",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "name": "physical_activity_bout",
+      "attributes": [
+        {
+          "name": "bout_type",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "notification",
+      "attributes": [
+        {
+          "name": "last_action",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "stress_self_report",
+      "attributes": [
+        {
+          "name": "stress_value",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "location_segment",
+      "attributes": [
+        {
+          "name": "location_type",
+          "type": "string"
+        },
+        {
+          "name": "start_time",
+          "type": "string"
+        },
+        {
+          "name": "end_time",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "sensorEvents": [
+    {
+      "id": "465dd06c-4423-474c-975f-e0413b41b89e",
+      "sensorEventType": "accelerometer",
+      "time": "2025-05-25T14:00:17.883000",
+      "sensorEventTypeAttributes": [
+        {
+          "name": "x",
+          "value": 8.46341323852539
+        },
+        {
+          "name": "y",
+          "value": -4.654040336608887
+        },
+        {
+          "name": "z",
+          "value": 0.02392822504043579
+        }
+      ],
+      "relationships": [
+        {
+          "id": "d360ac20-326e-4f6f-8113-baa47ef536ef",
+          "type": "object",
+          "qualifier": "source"
+        },
+        {
+          "id": "8d47453a-6a5c-454d-806a-971b71a11d8f",
+          "type": "object",
+          "qualifier": "occurred_on"
+        }
+      ],
+      "event_type": "sensor"
+    },
+    {
+      "id": "318dfae2-58f9-4cd5-b735-9053ca888a84",
+      "sensorEventType": "activity_type",
+      "time": "2025-05-25T14:02:54.156000",
+      "sensorEventTypeAttributes": [
+        {
+          "name": "type",
+          "value": "WALKING"
+        },
+        {
+          "name": "speed",
+          "value": 4.099999904632568
+        },
+        {
+          "name": "steps",
+          "value": 1707
+        },
+        {
+          "name": "walks",
+          "value": 1693
+        },
+        {
+          "name": "runs",
+          "value": 3
+        },
+        {
+          "name": "freq",
+          "value": 1.600000023841858
+        },
+        {
+          "name": "distance",
+          "value": 1254.780029296875
+        },
+        {
+          "name": "calories",
+          "value": 61.86999893188477
+        }
+      ],
+      "relationships": [
+        {
+          "id": "d360ac20-326e-4f6f-8113-baa47ef536ef",
+          "type": "object",
+          "qualifier": "source"
+        },
+        {
+          "id": "8d47453a-6a5c-454d-806a-971b71a11d8f",
+          "type": "object",
+          "qualifier": "occurred_on"
+        }
+      ],
+      "event_type": "sensor"
+    },
+    {
+      "id": "e4f2ea1a-fa01-4fba-a0f9-8e033044428a",
+      "sensorEventType": "heartrate",
+      "time": "2025-05-25T14:00:17.881000",
+      "sensorEventTypeAttributes": [
+        {
+          "name": "bpm",
+          "value": 90.0
+        },
+        {
+          "name": "pp",
+          "value": 767.0
+        }
+      ],
+      "relationships": [
+        {
+          "id": "d360ac20-326e-4f6f-8113-baa47ef536ef",
+          "type": "object",
+          "qualifier": "source"
+        },
+        {
+          "id": "8d47453a-6a5c-454d-806a-971b71a11d8f",
+          "type": "object",
+          "qualifier": "occurred_on"
+        }
+      ],
+      "event_type": "sensor"
+    },
+    {
+      "id": "109085bf-9c19-4c2a-8792-1bfaba12b242",
+      "sensorEventType": "location",
+      "time": "2025-05-25T14:02:22",
+      "sensorEventTypeAttributes": [
+        {
+          "name": "latitude",
+          "value": 52.09357452392578
+        },
+        {
+          "name": "longitude",
+          "value": 5.111295223236084
+        },
+        {
+          "name": "altitude",
+          "value": 46.5
+        },
+        {
+          "name": "speed",
+          "value": 5.576400089263916
+        },
+        {
+          "name": "error",
+          "value": 11.0
+        }
+      ],
+      "relationships": [
+        {
+          "id": "d360ac20-326e-4f6f-8113-baa47ef536ef",
+          "type": "object",
+          "qualifier": "source"
+        },
+        {
+          "id": "8d47453a-6a5c-454d-806a-971b71a11d8f",
+          "type": "object",
+          "qualifier": "occurred_on"
+        }
+      ],
+      "event_type": "sensor"
+    }
+  ],
+  "behaviorEvents": [
+    {
+      "id": "67b8d80e-fb50-4037-9c3a-8db93746fc89",
+      "behaviorEventType": "mood",
+      "time": "2025-05-25T13:00:00.886000",
+      "behaviorEventTypeAttributes": [
+        {
+          "name": "valence",
+          "value": 6
+        },
+        {
+          "name": "arousal",
+          "value": 6
+        },
+        {
+          "name": "stress",
+          "value": 4
+        },
+        {
+          "name": "location",
+          "value": "invalid"
+        }
+      ],
+      "relationships": [
+        {
+          "id": "d360ac20-326e-4f6f-8113-baa47ef536ef",
+          "type": "object",
+          "qualifier": "source"
+        },
+        {
+          "id": "8d47453a-6a5c-454d-806a-971b71a11d8f",
+          "type": "object",
+          "qualifier": "occurred_on"
+        },
+        {
+          "id": "b007b627-8e70-4a80-b511-be98b3e2bf3a",
+          "type": "object",
+          "qualifier": "reports_stress"
+        },
+        {
+          "type": "object",
+          "id": "38643450-f107-48a1-bd35-4dbdbfdc7a1d",
+          "qualifier": "occurred_in_location"
+        },
+        {
+          "id": "a61d3d86-ba05-4fe9-86f1-737f11f1bea4",
+          "type": "object",
+          "qualifier": "notified_by"
+        }
+      ],
+      "event_type": "behavior"
+    },
+    {
+      "id": "b75e0192-027a-452e-bc60-661d42c68d79",
+      "behaviorEventType": "notification",
+      "time": "2025-05-25T12:59:53.042000",
+      "behaviorEventTypeAttributes": [
+        {
+          "name": "action",
+          "value": "READ"
+        },
+        {
+          "name": "location",
+          "value": "invalid"
+        }
+      ],
+      "relationships": [
+        {
+          "id": "d360ac20-326e-4f6f-8113-baa47ef536ef",
+          "type": "object",
+          "qualifier": "source"
+        },
+        {
+          "id": "8d47453a-6a5c-454d-806a-971b71a11d8f",
+          "type": "object",
+          "qualifier": "occurred_on"
+        },
+        {
+          "id": "a61d3d86-ba05-4fe9-86f1-737f11f1bea4",
+          "type": "object",
+          "qualifier": "reads"
+        },
+        {
+          "type": "object",
+          "id": "38643450-f107-48a1-bd35-4dbdbfdc7a1d",
+          "qualifier": "occurred_in_location"
+        },
+        {
+          "id": "b007b627-8e70-4a80-b511-be98b3e2bf3a",
+          "type": "object",
+          "qualifier": "reports_stress"
+        }
+      ],
+      "event_type": "behavior"
+    },
+    {
+      "id": "80983ab6-71e6-41c1-abca-827ec64eb188",
+      "behaviorEventType": "physical_activity_bout",
+      "time": "2025-05-10T10:18:01.735000",
+      "behaviorEventTypeAttributes": [
+        {
+          "name": "lifecycle",
+          "value": "START"
+        },
+        {
+          "name": "bout_type",
+          "value": "MODERATE-VIGOROUS_PA"
+        },
+        {
+          "name": "location",
+          "value": "invalid"
+        }
+      ],
+      "relationships": [
+        {
+          "id": "248a72ae-72ea-40ce-bddd-451e06ef20aa",
+          "type": "object",
+          "qualifier": "starts"
+        },
+        {
+          "id": "3d508954-d9da-4336-9ac0-4760573e74f6",
+          "type": "object",
+          "qualifier": "occurred_on"
+        },
+        {
+          "id": "e4365330-3468-48c3-bce3-145668e06f8f",
+          "type": "object",
+          "qualifier": "performed_by"
+        },
+        {
+          "type": "object",
+          "id": "734c2ee7-9c87-403f-8e15-4121f5a2ef82",
+          "qualifier": "occurred_in_location"
+        },
+        {
+          "id": "bc1662ce-e1d7-4495-95e2-d94f7543d570",
+          "type": "object",
+          "qualifier": "related_to_report"
+        }
+      ]
+    },
+    {
+      "id": "115fd3ce-49ef-4aca-90f6-7f6789b144ad",
+      "behaviorEventType": "location_event",
+      "time": "2025-05-23T00:00:29",
+      "behaviorEventTypeAttributes": [
+        {
+          "name": "lifecycle",
+          "value": "Entering"
+        },
+        {
+          "name": "location_type",
+          "value": "invalid"
+        }
+      ],
+      "relationships": [
+        {
+          "type": "object",
+          "id": "7a5de350-fc9c-471a-8d9a-2ae128539237",
+          "qualifier": "derived_from"
+        },
+        {
+          "type": "object",
+          "id": "d360ac20-326e-4f6f-8113-baa47ef536ef",
+          "qualifier": "performed_by"
+        },
+        {
+          "type": "object",
+          "id": "653667bf-f307-4c40-8692-80556139a71e",
+          "qualifier": "occurred_on"
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "id": "d360ac20-326e-4f6f-8113-baa47ef536ef",
+      "type": "player",
+      "attributes": [
+        {
+          "name": "id",
+          "value": "107631",
+          "time": "2025-05-09T00:00:00"
+        }
+      ],
+      "relationships": [
+        {
+          "id": "1305bab8-7453-413b-abdc-56795cfbdfe7",
+          "type": "object",
+          "qualifier": "participant"
+        }
+      ]
+    },
+    {
+      "id": "1305bab8-7453-413b-abdc-56795cfbdfe7",
+      "type": "intervention",
+      "attributes": [
+        {
+          "name": "goal",
+          "value": "Illustrate the use of process mining in mHealth applications",
+          "time": "2025-05-09T00:00:00"
+        },
+        {
+          "name": "start_date",
+          "value": "2025-05-09T00:00:00",
+          "time": "2025-05-09T00:00:00"
+        },
+        {
+          "name": "end_date",
+          "value": "2025-06-09T00:00:00",
+          "time": "2025-05-09T00:00:00"
+        }
+      ],
+      "relationships": [
+        {
+          "id": "d360ac20-326e-4f6f-8113-baa47ef536ef",
+          "type": "object",
+          "qualifier": "participant"
+        }
+      ]
+    },
+    {
+      "id": "f7397705-b95e-4127-9090-32e0297be74a",
+      "type": "day",
+      "attributes": [
+        {
+          "name": "date",
+          "value": "2025-03-20",
+          "time": "2025-03-20T00:00:00"
+        },
+        {
+          "name": "day_of_week",
+          "value": "Thursday",
+          "time": "2025-03-20T00:00:00"
+        }
+      ],
+      "relationships": [
+        {
+          "id": "7d3989e0-c206-4897-b9cb-cce2ce2fd40d",
+          "type": "object",
+          "qualifier": "belongs_to"
+        }
+      ]
+    },
+    {
+      "id": "7d3989e0-c206-4897-b9cb-cce2ce2fd40d",
+      "type": "week",
+      "attributes": [
+        {
+          "name": "week_start_date",
+          "value": "2025-03-17",
+          "time": "2025-03-17T00:00:00"
+        },
+        {
+          "name": "week_number",
+          "value": 12,
+          "time": "2025-03-17T00:00:00"
+        },
+        {
+          "name": "year",
+          "value": 2025,
+          "time": "2025-03-17T00:00:00"
+        }
+      ],
+      "relationships": [
+        {
+          "id": "f7397705-b95e-4127-9090-32e0297be74a",
+          "type": "object",
+          "qualifier": "contains"
+        },
+        {
+          "id": "109925f4-92f9-4171-8de8-c158ce3c4bb9",
+          "type": "object",
+          "qualifier": "contains"
+        }
+      ]
+    },
+    {
+      "id": "248a72ae-72ea-40ce-bddd-451e06ef20aa",
+      "type": "physical_activity_bout",
+      "attributes": [
+        {
+          "name": "bout_type",
+          "value": "MODERATE-VIGOROUS_PA",
+          "time": "2025-05-10T10:18:01.735000"
+        },
+        {
+          "name": "start_time",
+          "value": "2025-05-10T10:18:01.735000",
+          "time": "2025-05-10T10:18:01.735000"
+        },
+        {
+          "name": "end_time",
+          "value": "2025-05-10T10:21:21.695000",
+          "time": "2025-05-10T10:21:21.695000"
+        }
+      ],
+      "relationships": [
+        {
+          "id": "3d508954-d9da-4336-9ac0-4760573e74f6",
+          "type": "object",
+          "qualifier": "occurred_on"
+        },
+        {
+          "id": "e4365330-3468-48c3-bce3-145668e06f8f",
+          "type": "object",
+          "qualifier": "performed_by"
+        },
+        {
+          "type": "object",
+          "id": "734c2ee7-9c87-403f-8e15-4121f5a2ef82",
+          "qualifier": "overlaps_with_location"
+        }
+      ]
+    },
+    {
+      "id": "70302baa-89b3-48e7-a363-c248313a76bf",
+      "type": "notification",
+      "attributes": [
+        {
+          "name": "last_action",
+          "value": "READ",
+          "time": "2025-05-09T08:51:55.800000"
+        }
+      ],
+      "relationships": [
+        {
+          "id": "f9efdadf-386e-46a3-b654-d9476f18d825",
+          "type": "object",
+          "qualifier": "occurred_on"
+        },
+        {
+          "id": "e4365330-3468-48c3-bce3-145668e06f8f",
+          "type": "object",
+          "qualifier": "received_by"
+        },
+        {
+          "type": "object",
+          "id": "dac51573-5483-4e52-88b3-f18b72c92f1b",
+          "qualifier": "overlaps_with_location"
+        }
+      ]
+    },
+    {
+      "id": "39c34d2c-02ce-4720-8b38-e9a70009fdf8",
+      "type": "stress_self_report",
+      "attributes": [
+        {
+          "name": "stress_value",
+          "value": 6.0,
+          "time": "2025-03-20T15:39:28.698000"
+        }
+      ],
+      "relationships": [
+        {
+          "id": "f7397705-b95e-4127-9090-32e0297be74a",
+          "type": "object",
+          "qualifier": "occurred_on"
+        },
+        {
+          "id": "d360ac20-326e-4f6f-8113-baa47ef536ef",
+          "type": "object",
+          "qualifier": "reported_by"
+        }
+      ]
+    },
+    {
+      "id": "313f7458-9e96-416e-a04d-3ec37444d852",
+      "type": "location_segment",
+      "attributes": [
+        {
+          "name": "location_type",
+          "value": "invalid",
+          "time": "2025-05-23T00:00:29"
+        },
+        {
+          "name": "start_time",
+          "value": "2025-05-23 00:00:29",
+          "time": "2025-05-23T00:00:29"
+        },
+        {
+          "name": "end_time",
+          "value": "2025-05-23 08:13:27",
+          "time": "2025-05-23T08:13:27"
+        }
+      ],
+      "relationships": [
+        {
+          "type": "behaviorEvent",
+          "id": "115fd3ce-49ef-4aca-90f6-7f6789b144ad",
+          "qualifier": "enters"
+        },
+        {
+          "type": "behaviorEvent",
+          "id": "8d579106-c817-4c06-8ef5-c4008d0a38cd",
+          "qualifier": "exits"
+        },
+        {
+          "type": "object",
+          "id": "d360ac20-326e-4f6f-8113-baa47ef536ef",
+          "qualifier": "performed_by"
+        },
+        {
+          "type": "object",
+          "id": "653667bf-f307-4c40-8692-80556139a71e",
+          "qualifier": "occurred_on"
+        }
+      ]
+    }
+  ]
+}

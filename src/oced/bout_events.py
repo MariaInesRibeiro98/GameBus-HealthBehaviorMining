@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 import pandas as pd
 import uuid
@@ -461,4 +461,297 @@ class BoutEventManager:
             with open(output_path, 'wb') as f:
                 f.write(json_bytes)
         
-        print(f"Saved extended data to: {output_path}") 
+        print(f"Saved extended data to: {output_path}")
+
+    def link_bout_events_to_report_objects(
+        self,
+        data: Dict[str, Any],
+        time_period: timedelta = timedelta(hours=3)
+    ) -> Dict[str, Any]:
+        """
+        For each physical activity bout START event, find the closest report event (mood events) 
+        within a configurable time period that occurs AFTER the bout event. If a report event 
+        is found, find its related report object (stress_self_report) and relate BOTH the START 
+        and corresponding END events to this object.
+        
+        Args:
+            data (Dict[str, Any]): The OCED data dictionary containing bout events and report events
+            time_period (timedelta): Time window to look for nearby report events that occur after 
+                                   the bout START event (default: 3 hours)
+            
+        Returns:
+            Dict[str, Any]: Updated OCED data dictionary with new relationships in bout START and END events
+        """
+        # Create a copy of the input data to modify
+        extended_data = data.copy()
+        
+        # Get all physical activity bout events
+        bout_events = [
+            event for event in extended_data.get('behaviorEvents', [])
+            if event['behaviorEventType'] == 'physical_activity_bout'
+        ]
+        
+        # Get all mood events (report events)
+        mood_events = [
+            event for event in extended_data.get('behaviorEvents', [])
+            if event['behaviorEventType'] == 'mood'
+        ]
+        
+        # Get all stress_self_report objects
+        stress_objects = {
+            obj['id']: obj for obj in extended_data.get('objects', [])
+            if obj['type'] == 'stress_self_report'
+        }
+        
+        if not bout_events:
+            print("No physical activity bout events found in the data.")
+            return extended_data
+        
+        if not mood_events:
+            print("No mood events (report events) found in the data.")
+            return extended_data
+        
+        # Separate START and END events
+        start_events = [
+            event for event in bout_events
+            if event['behaviorEventTypeAttributes'][0]['value'] == 'START'
+        ]
+        
+        end_events = [
+            event for event in bout_events
+            if event['behaviorEventTypeAttributes'][0]['value'] == 'END'
+        ]
+        
+        print(f"\nProcessing {len(start_events)} bout START events")
+        print(f"Looking for mood events within {time_period} AFTER each bout START event")
+        
+        linked_count = 0
+        
+        # Process each START event
+        for start_event in tqdm(start_events, desc="Linking bout events to report objects"):
+            start_time = pd.to_datetime(start_event['time'])
+            
+            # Find the closest mood event within the time period that occurs AFTER the START event
+            closest_mood_event = None
+            min_time_diff = time_period
+            
+            for mood_event in mood_events:
+                mood_time = pd.to_datetime(mood_event['time'])
+                
+                # Only consider mood events that occur after the START event
+                if mood_time > start_time:
+                    time_diff = (mood_time - start_time).total_seconds()
+                    
+                    # Check if within time period and closer than current closest
+                    if time_diff <= time_period.total_seconds() and time_diff < min_time_diff.total_seconds():
+                        closest_mood_event = mood_event
+                        min_time_diff = timedelta(seconds=time_diff)
+            
+            if not closest_mood_event:
+                continue
+            
+            # Find the stress_self_report object related to this mood event
+            stress_object_id = None
+            for rel in closest_mood_event.get('relationships', []):
+                if (rel['type'] == 'object' and 
+                    rel['qualifier'] == 'reports_stress' and 
+                    rel['id'] in stress_objects):
+                    stress_object_id = rel['id']
+                    break
+            
+            if not stress_object_id:
+                continue
+            
+            # Find the corresponding END event for this bout object
+            bout_object_id = None
+            for rel in start_event.get('relationships', []):
+                if (rel['type'] == 'object' and 
+                    rel['qualifier'] == 'starts'):
+                    bout_object_id = rel['id']
+                    break
+            
+            if not bout_object_id:
+                continue
+            
+            # Find the END event for this bout object
+            corresponding_end_event = None
+            for end_event in end_events:
+                for rel in end_event.get('relationships', []):
+                    if (rel['type'] == 'object' and 
+                        rel['qualifier'] == 'ends' and 
+                        rel['id'] == bout_object_id):
+                        corresponding_end_event = end_event
+                        break
+                if corresponding_end_event:
+                    break
+            
+            if not corresponding_end_event:
+                continue
+            
+            # Add relationship from START event to stress_self_report object
+            if 'relationships' not in start_event:
+                start_event['relationships'] = []
+            
+            # Check if relationship already exists for START event
+            if not any(
+                rel['type'] == 'object' and 
+                rel['id'] == stress_object_id and 
+                rel['qualifier'] == 'related_to_report'
+                for rel in start_event['relationships']
+            ):
+                start_event['relationships'].append({
+                    "id": stress_object_id,
+                    "type": "object",
+                    "qualifier": "related_to_report"
+                })
+                linked_count += 1
+            
+            # Add relationship from END event to stress_self_report object
+            if 'relationships' not in corresponding_end_event:
+                corresponding_end_event['relationships'] = []
+            
+            # Check if relationship already exists for END event
+            if not any(
+                rel['type'] == 'object' and 
+                rel['id'] == stress_object_id and 
+                rel['qualifier'] == 'related_to_report'
+                for rel in corresponding_end_event['relationships']
+            ):
+                corresponding_end_event['relationships'].append({
+                    "id": stress_object_id,
+                    "type": "object",
+                    "qualifier": "related_to_report"
+                })
+                linked_count += 1
+        
+        print(f"\nLinking complete:")
+        print(f"- Linked {linked_count} bout events (both START and END) to stress_self_report objects")
+        print(f"- Time window used: {time_period}")
+        print(f"- Processed {len(start_events)} START events to find corresponding END events")
+        
+        return extended_data
+
+    def link_self_report_events_to_bout_objects(
+        self,
+        data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        For each mood event (self report event), find the related stress_self_report object,
+        then find ALL physical activity bout events that are related to this stress_self_report object
+        with qualifier "related_to_report". Finally, add relationships from the mood event to ALL
+        the physical activity bout objects with qualifier "influenced_by".
+        
+        Args:
+            data (Dict[str, Any]): The OCED data dictionary containing mood events, bout events, 
+                                  and their related objects
+            
+        Returns:
+            Dict[str, Any]: Updated OCED data dictionary with new relationships in mood events
+        """
+        # Create a copy of the input data to modify
+        extended_data = data.copy()
+        
+        # Get all mood events (self report events)
+        mood_events = [
+            event for event in extended_data.get('behaviorEvents', [])
+            if event['behaviorEventType'] == 'mood'
+        ]
+        
+        # Get all physical activity bout events
+        bout_events = [
+            event for event in extended_data.get('behaviorEvents', [])
+            if event['behaviorEventType'] == 'physical_activity_bout'
+        ]
+        
+        # Get all stress_self_report objects
+        stress_objects = {
+            obj['id']: obj for obj in extended_data.get('objects', [])
+            if obj['type'] == 'stress_self_report'
+        }
+        
+        # Get all physical activity bout objects
+        bout_objects = {
+            obj['id']: obj for obj in extended_data.get('objects', [])
+            if obj['type'] == 'physical_activity_bout'
+        }
+        
+        if not mood_events:
+            print("No mood events found in the data.")
+            return extended_data
+        
+        if not bout_events:
+            print("No physical activity bout events found in the data.")
+            return extended_data
+        
+        print(f"\nProcessing {len(mood_events)} mood events")
+        print("Linking mood events to physical activity bout objects...")
+        
+        linked_count = 0
+        
+        # Process each mood event
+        for mood_event in tqdm(mood_events, desc="Linking mood events to bout objects"):
+            # Find the related stress_self_report object for this mood event
+            stress_object_id = None
+            for rel in mood_event.get('relationships', []):
+                if (rel['type'] == 'object' and 
+                    rel['qualifier'] == 'reports_stress' and 
+                    rel['id'] in stress_objects):
+                    stress_object_id = rel['id']
+                    break
+            
+            if not stress_object_id:
+                continue
+            
+            # Find ALL physical activity bout events that are related to this stress_self_report object
+            related_bout_events = []
+            for bout_event in bout_events:
+                for rel in bout_event.get('relationships', []):
+                    if (rel['type'] == 'object' and 
+                        rel['qualifier'] == 'related_to_report' and 
+                        rel['id'] == stress_object_id):
+                        related_bout_events.append(bout_event)
+                        break
+            
+            if not related_bout_events:
+                continue
+            
+            # Collect all unique physical activity bout object IDs related to these bout events
+            bout_object_ids = set()
+            for bout_event in related_bout_events:
+                for rel in bout_event.get('relationships', []):
+                    if (rel['type'] == 'object' and 
+                        rel['qualifier'] in ['starts', 'ends'] and 
+                        rel['id'] in bout_objects):
+                        bout_object_ids.add(rel['id'])
+            
+            if not bout_object_ids:
+                continue
+            
+            # Add relationships from mood event to ALL physical activity bout objects
+            if 'relationships' not in mood_event:
+                mood_event['relationships'] = []
+            
+            # Add relationships for each unique bout object ID
+            for bout_object_id in bout_object_ids:
+                # Check if relationship already exists
+                if not any(
+                    rel['type'] == 'object' and 
+                    rel['id'] == bout_object_id and 
+                    rel['qualifier'] == 'influenced_by'
+                    for rel in mood_event['relationships']
+                ):
+                    mood_event['relationships'].append({
+                        "id": bout_object_id,
+                        "type": "object",
+                        "qualifier": "influenced_by"
+                    })
+                    linked_count += 1
+        
+        print(f"\nLinking complete:")
+        print(f"- Linked {linked_count} mood events to physical activity bout objects")
+        print(f"- Total relationships created: {linked_count}")
+        print(f"- Relationship qualifier used: 'influenced_by'")
+        print(f"- Each mood event can be linked to multiple bout objects")
+        
+        return extended_data
+        

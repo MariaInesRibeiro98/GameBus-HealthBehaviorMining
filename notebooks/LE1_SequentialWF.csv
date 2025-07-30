@@ -1,6 +1,0 @@
-﻿timestamp;location;detailed_event_type;caseID
-11/05/2025 13:48;other;START_LIGHT_PA;11/05/2025
-11/05/2025 14:08;other;END_LIGHT_PA;11/05/2025
-11/05/2025 14:55;home;notification_RECEIVED;11/05/2025
-11/05/2025 14:55;home;notification_READ;11/05/2025
-11/05/2025 14:55;home;stress_report_low;11/05/2025

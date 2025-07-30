@@ -4,35 +4,17 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Project Status: Active Development](https://img.shields.io/badge/Project%20Status-Active%20Development-green)](https://github.com/yourusername/GameBus-HealthBehaviorMining)
 
-A comprehensive framework for extracting, processing, and analyzing health behavior data from the GameBus platform using process mining techniques. This project aims to transform raw health and activity data into meaningful insights through object-centric event logs (OCEL), enabling detailed analysis of health behaviors and patterns.
+A comprehensive framework for extracting, processing, and analyzing health behavior data from the GameBus platform using Object-Centric Process Mining (OCPM) techniques. This project implements the Object-Centric Event Log (OCEL) standard with sensor data extensions to transform raw health and activity data into meaningful insights through object-centric event logs, enabling detailed analysis of health behaviors and patterns.
 
 ## 🎯 Project Goals
 
-- Extract and process health behavior data from GameBus platform
-- Transform raw sensor data into structured event logs
-- Enable process mining analysis of health behaviors
-- Support research in health behavior patterns and interventions
-- Provide a foundation for personalized health insights
+- Extract and process multi-modal health behavior data from the GameBus platform
+- Transform raw sensor data into the extended Object-Centric Event Data (OCEL) format
+- Enable advanced process mining analysis of health behaviors using OCPM techniques
+- Support research in health behavior patterns, interventions, and personalized health insights
+- Provide a foundation for data-driven and process-centric health behavior analysis and intervention design
+- Facilitate the study of complex health behavior processes through object-centric modeling
 
-## 📋 Features
-
-- **Data Extraction**: Comprehensive extraction of multiple data types from GameBus API
-  - GPS location data with categorization
-  - Activity type data
-  - Heart rate monitoring
-  - Accelerometer readings
-  - Mood logging
-  - Notification data
-
-- **Location Categorization**: Intelligent location enrichment using Google Places API
-  - Automatic categorization of GPS points
-  - Support for modular processing
-  - Flexible output formats (CSV/JSON)
-
-- **Process Mining Ready**: 
-  - OCEL 2.0 compliant output
-  - Custom mHealth extensions
-  - Support for complex event analysis
 
 ## 🏗️ Project Structure
 
@@ -47,31 +29,135 @@ GameBus-HealthBehaviorMining/
 │   │   ├── gamebus_client.py       # GameBus API client
 │   │   ├── data_collectors.py      # Data collectors for different data types
 │   │   └── README.md              # Detailed extraction documentation
-│   ├── categorization/             # Location data categorization
-│   │   ├── location_categorizer.py # Categorize locations using Google Places API
-│   │   └── README.md              # Categorization service documentation
-│   ├── preprocessing/              # Data preprocessing and cleaning (TBD)
-│   ├── activity_recognition/       # Human activity recognition (TBD)
-│   ├── ocel_generation/            # OCEL format generation (TBD)
-│   └── utils/                      # Utility functions
-│       ├── logging.py              # Logging utilities
-│       └── file_handlers.py        # File handling utilities
+│   ├── oced/                       # Object-Centric Event Data processing
+│   │   ├── oced_data_query.py      # OCED data querying and management
+│   │   ├── time_objects.py         # Temporal object creation and management
+│   │   ├── location_objects.py     # Location-based object processing
+│   │   ├── stress_objects.py       # Stress and mood object management
+│   │   ├── notification_events.py  # Notification event processing
+│   │   ├── bout_events.py          # Physical activity bout event creation
+│   │   ├── physical_activity_classifier.py # Activity classification algorithms
+│   │   ├── bout_detection.py       # Bout detection algorithms
+│   │   ├── feature_extraction.py   # Feature extraction for activity recognition
+│   │   ├── data_resampling.py      # Sensor data resampling utilities
+│   │   ├── acc_calibration.py      # Accelerometer calibration
+│   │   ├── smoothing.py            # Data smoothing algorithms
+│   │   └── visualization.py        # Data visualization utilities
+│   ├── extended_ocel/              # Extended OCEL processing
+│   │   ├── covert_to_ocel.py       # OCED to OCEL conversion
+│   │   ├── read_json.py            # JSON data reading utilities
+│   │   ├── select_sample.py        # Sample selection for analysis
+│   │   └── validation.py           # Data validation utilities
+│   ├── transformation/             # Data transformation utilities
+│   │   ├── gamebus_to_oced_transformer.py # GameBus to OCED transformation
+│   │   └── README.md              # Transformation documentation
+│   ├── preprocessing/              # Data preprocessing utilities
+│   │   ├── resampling.py           # Data resampling algorithms
+│   │   └── README.md              # Preprocessing documentation
 ├── notebooks/                      # Jupyter notebooks
-│   └── 01_data_extraction.ipynb    # Data extraction demonstration
-├── schema/                         # OCEL JSON schemas
-│   ├── OCEL2.0.json                # OCEL 2.0 schema
-│   └── mHealth-OCEL2.0.json        # mHealth extension of OCEL 2.0 schema
-├── data/                           # Data directory
-│   ├── raw/                        # Raw extracted data
-│   ├── categorized/                # Categorized/enriched data (location types)
-│   ├── preprocessed/               # Cleaned and normalized data (future)
-│   ├── features/                   # Features for activity recognition (future)
-│   ├── activities/                 # Recognized activities (future)
-│   └── ocel/                       # Generated OCEL data (future)
-└── pipeline.py                     # Main pipeline runner
+│   ├── 01.1_data_extraction__from_source.ipynb    # Data extraction demonstration
+│   ├── 01.2_data_extraction__to_oced.ipynb        # OCED transformation
+│   ├── 01.3_data_extraction__create_time_objects.ipynb # Temporal object creation
+│   ├── 01.4_data_extraction__create_notification_objects.ipynb # Notification processing
+│   ├── 01.5_data_extraction__create_self-report_objects.ipynb # Self-report processing
+│   ├── 01.6_data_extraction__create_location_objects_events_attributes.ipynb # Location processing
+│   ├── 01.7_data_extraction__link_notification_self-report_events_objects.ipynb # Event linking
+│   ├── 01.8_data_extraction__link_bout_events_self-report_objects.ipynb # Bout linking
+│   ├── 01.9_data_extraction__link_bout_events_to_report_objects.ipynb # Report linking
+│   ├── 02_activity_recognition.ipynb              # Activity recognition analysis
+│   ├── 03.0_querying__sample_selection.ipynb      # Sample selection
+│   ├── 03.1_querying__backward_compatibility.ipynb # Backward compatibility
+│   ├── 03.2_querying__rename_event_types.ipynb    # Event type management
+│   ├── 03.3_querying__filter_per_object_event.ipynb # Object filtering
+│   └── 04_discovery_.ipynb                        # Process discovery
+├── schema/                         # Extended OCEL Schema & Validation
+│   ├── extended-OCEL-schema.json   # Extended OCEL JSON schema for sensor data
+│   ├── extended_OCEL-minimal_sample.json # Sample data file demonstrating the format
+│   ├── OCEL-2.0-Standard.json      # Standard OCEL 2.0 schema for reference
+│   └── drafts/                     # Schema drafts and examples
+├── examples/                       # Example data and scripts
+│   ├── GB-users.csv               # Example user data
+│   ├── profile_example.py         # Profile example
+│   └── relate_location_pa_bouts.py # Location-PA bout analysis
+├── requirements.txt                # Python dependencies
+├── README.md                       # Project documentation
+└── .gitignore                      # Git ignore rules
 ```
 
+## 📚 Notebook Workflow & Extended OCEL Schema
+
+### 🔬 Extended OCEL Format
+
+The project introduces an **extended Object-Centric Event Log (OCEL) format** specifically designed for sensor data and health behavior analysis:
+
+- **`schema/extended-OCEL-schema.json`**: Complete JSON schema defining the extended OCEL structure
+- **`schema/extended_OCEL-minimal_sample.json`**: Sample data file demonstrating the format
+- **`src/extended_ocel/validation.py`**: Validation methods to ensure data compliance
+
+The extended OCEL format supports:
+- **Sensor Events**: High-frequency sensor data (accelerometer, heart rate, location)
+- **Behavior Events**: User interactions and self-reports
+- **Object Relationships**: Complex relationships between events and objects
+- **Temporal Context**: Time-based object creation and linking
+
+### 📖 Notebook Summary
+
+The notebooks follow a comprehensive workflow for health behavior analysis:
+
+#### **Phase 1: Data Extraction & Transformation**
+- **`01.1_data_extraction__from_source.ipynb`**: Extract data from GameBus-Experiencer app using Samsung Active 2 smartwatch
+- **`01.2_data_extraction__to_oced.ipynb`**: Transform GameBus data into extended OCEL format, handling sensor and behavioral data
+- **`01.3_data_extraction__create_time_objects.ipynb`**: Create temporal objects (days, weeks) and relate them to events
+- **`01.4_data_extraction__create_notification_objects.ipynb`**: Create notification objects from notification events
+- **`01.5_data_extraction__create_self-report_objects.ipynb`**: Create stress self-report objects from mood events
+- **`01.6_data_extraction__create_location_objects_events_attributes.ipynb`**: Process location data and create location objects
+- **`01.7_data_extraction__link_notification_self-report_events_objects.ipynb`**: Link self-report objects to notification events
+- **`01.8_data_extraction__link_bout_events_self-report_objects.ipynb`**: Link physical activity bouts to self-report objects
+- **`01.9_data_extraction__link_bout_events_to_report_objects.ipynb`**: Link bout events to stress self-report objects within time windows
+
+#### **Phase 2: Activity Recognition**
+- **`02_activity_recognition.ipynb`**: Recognize physical activity bouts using accelerometer and heart rate data with decision tree classification
+
+#### **Phase 3: Data Querying & Filtering**
+- **`03.0_querying__sample_selection.ipynb`**: Select representative samples from extended OCEL data
+- **`03.1_querying__backward_compatibility.ipynb`**: Convert extended OCEL to standard format for PM4Py compatibility
+- **`03.2_querying__rename_event_types.ipynb`**: Handle event type naming for specific analysis profiles
+- **`03.3_querying__filter_per_object_event.ipynb`**: Filter OCEL data by object types and events
+
+#### **Phase 4: Process Discovery**
+- **`04_discovery_.ipynb`**: Perform process mining analysis on health behavior patterns, focusing on stress-behavior correlations and notification engagement
+
+### 🔍 Validation & Quality Assurance
+
+The framework includes comprehensive validation methods in `src/extended_ocel/validation.py`:
+- **Schema Validation**: Ensures data follows the extended OCEL schema
+- **Data Integrity Checks**: Validates relationships and object references
+- **Format Compliance**: Verifies JSON structure and required fields
+
 ## 🚀 Getting Started
+
+<div align="center">
+
+# ⚠️ IMPORTANT: DATA SETUP REQUIRED ⚠️
+
+**The `data/` folder is hidden from this repository for privacy reasons.**
+
+This folder contains sensitive health data extracted from the GameBus platform and is **essential for running the notebooks**.
+
+### 🔧 What You Need to Do:
+
+1. **Create the data directory structure:**
+   ```bash
+   mkdir -p data/raw data/categorized data/ocel
+   ```
+
+2. **Extract your own data** using the provided notebooks and scripts
+
+3. **Follow the data extraction workflow** in the notebooks starting with `01.1_data_extraction__from_source.ipynb`
+
+**Without this data, the notebooks will not run properly!**
+
+</div>
 
 ### Prerequisites
 
@@ -88,7 +174,7 @@ git clone https://github.com/yourusername/GameBus-HealthBehaviorMining.git
 cd GameBus-HealthBehaviorMining
 ```
 
-2. Create and activate a virtual environment (recommended):
+2. (Optional) Create and activate a virtual environment:
 ```bash
 python -m venv venv
 # On Windows
@@ -101,6 +187,8 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+
+> **💡 Note**: Virtual environments are optional but recommended if you want to avoid potential package conflicts with other Python projects. For research and development, you can also install dependencies globally.
 
 4. Configure the project:
    - Create a `secret` folder with your credentials (see Configuration section)
@@ -133,105 +221,7 @@ This project can be configured in two ways:
 
 For detailed instructions, see `config/README.md`.
 
-## 💻 Usage
 
-### Using the Pipeline
-
-The pipeline supports various options for data extraction:
-
-```bash
-# Extract all data types
-python pipeline.py --extract-only
-
-# Extract specific data types
-python pipeline.py --extract-only --data-types location mood activity heartrate
-
-# Extract data for a specific user
-python pipeline.py --extract-only --user-id 123
-
-# Extract data within a date range
-python pipeline.py --extract-only --start-date 2024-01-01 --end-date 2024-02-01
-
-# Combine options
-python pipeline.py --extract-only --data-types location mood --start-date 2024-01-01 --user-id 123
-```
-
-After extraction, run the categorization service to enrich location data:
-
-```bash
-python src/categorization/location_categorizer.py --player-id 107631
-```
-
-Or, use the modular approach in your own scripts:
-
-```python
-from src.categorization.location_categorizer import LocationCategorizer
-
-categorizer = LocationCategorizer()
-df = categorizer.load_player_location_df(player_id)
-df_categorized = categorizer.categorize_location_df(df, player_id)
-categorizer.save_categorized_location_json(df_categorized, player_id)
-```
-
-For more detailed information about the extraction and categorization functionality, see `src/extraction/README.md` and `src/categorization/README.md`.
-
-### Using Notebooks
-
-Open and run the Jupyter notebooks in the `notebooks/` directory:
-
-```
-jupyter notebook notebooks/01_data_extraction.ipynb
-```
-
-## 📊 Data Types
-
-The framework extracts and processes the following types of data from GameBus:
-
-1. **Location Data**
-   - GPS coordinates (latitude, longitude)
-   - Altitude
-   - Speed
-   - Error margin
-   - Timestamps
-   - **Categorized location data**: Adds a `location_type` field (e.g., university, park, etc.)
-   - **Missing values in the output JSON are represented as the string `'NaN'`.**
-
-2. **Mood Data**
-   - Valence (pleasure-displeasure)
-   - Arousal (activation-deactivation)
-   - Stress state
-   - Event timestamps
-
-3. **Activity Type Data**
-   - Activity classification (walking, running, etc.)
-   - Speed
-   - Steps count
-   - Distance
-   - Calories burned
-
-4. **Heart Rate Data**
-   - Heart rate values
-   - Timestamps
-
-5. **Accelerometer Data**
-   - X, Y, Z axis measurements
-   - Timestamps
-
-6. **Notification Data**
-   - Notification actions
-   - Timestamps
-
-## 🔄 OCED Format
-
-The project implements the Object-Centric Event Data (OCED) standard with mHealth-specific extensions. This format enables:
-
-- **Object-Centric Analysis**: Track multiple objects (e.g., users, locations, activities) simultaneously
-- **Complex Event Relationships**: Capture rich relationships between events and objects
-- **Temporal Analysis**: Support for detailed temporal analysis of health behaviors
-- **Sensor Data Integration**: Seamless integration of various sensor readings
-- **Process Mining Compatibility**: Ready for use with process mining tools
-
-The schema is defined in `schema/OCED-mHealth.json`.
 
 ## 🤝 Contributing
 
@@ -247,9 +237,11 @@ Please read our [Contributing Guidelines](CONTRIBUTING.md) for more details.
 
 ## 📝 Future Work
 
-- [ ] Implement preprocessing pipeline
-- [ ] Add activity recognition module
-
+- [ ] Enhanced activity recognition algorithms
+- [ ] Advanced process discovery techniques
+- [ ] Real-time data processing capabilities
+- [ ] Integration with additional health platforms
+- [ ] Advanced visualization and dashboard features
 
 ## 📄 License
 
@@ -257,9 +249,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- GameBus platform for providing the API
-- OCED standard for process mining
+- GameBus platform for providing the API and data access
+- OCEL/OCED standards for process mining
 - Google Places API for location categorization
+- PM4Py community for process mining tools
 - All contributors and users of this framework
 
 ## 📧 Contact

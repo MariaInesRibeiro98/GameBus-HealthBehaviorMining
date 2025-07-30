@@ -12,6 +12,12 @@
 /config/*.ini
 /config/*.env
 
+#Work in progress
+/notebooks/wip
+/src/wip
+/utils
+/src/utils
+
 # Python specific
 __pycache__/
 *.py[cod]

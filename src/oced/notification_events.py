@@ -421,3 +421,51 @@ class NotificationEventManager:
                 f.write(json_bytes)
         
         print(f"Saved extended data to: {output_path}") 
+    
+    def link_notification_objects_to_stress_events(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        For each notification object, check if it is related to a stress_self_report object (via follows_notification).
+        If yes, find the mood event (behaviorEventType == 'mood') that reports this stress_self_report object (via reports_stress).
+        For each such mood event, add a relationship to the notification object with qualifier 'notified_by'.
+        Returns the updated data dictionary.
+        """
+        extended_data = data.copy()
+        # Build lookup for stress_self_report objects by notification id
+        notif_to_stress = {}
+        for obj in extended_data.get('objects', []):
+            if obj['type'] == 'stress_self_report':
+                notif_rel = next(
+                    (rel for rel in obj.get('relationships', [])
+                     if rel['type'] == 'object' and rel['qualifier'] == 'follows_notification'),
+                    None
+                )
+                if notif_rel:
+                    notif_to_stress.setdefault(notif_rel['id'], []).append(obj['id'])
+
+        # For each notification object
+        for notif_obj in extended_data.get('objects', []):
+            if notif_obj['type'] != 'notification':
+                continue
+            notif_id = notif_obj['id']
+            if notif_id not in notif_to_stress:
+                continue
+            # For each related stress_self_report object
+            for stress_id in notif_to_stress[notif_id]:
+                # Find the mood event that reports this stress object
+                for event in extended_data.get('behaviorEvents', []):
+                    if event.get('behaviorEventType') == 'mood':
+                        if any(
+                            rel['type'] == 'object' and rel['id'] == stress_id and rel['qualifier'] == 'reports_stress'
+                            for rel in event.get('relationships', [])
+                        ):
+                            # Add relationship FROM the mood event TO the notification object
+                            if not any(
+                                rel['type'] == 'object' and rel['id'] == notif_id and rel['qualifier'] == 'notified_by'
+                                for rel in event.get('relationships', [])
+                            ):
+                                event.setdefault('relationships', []).append({
+                                    "id": notif_id,
+                                    "type": "object",
+                                    "qualifier": "notified_by"
+                                })
+        return extended_data
