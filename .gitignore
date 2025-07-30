@@ -17,6 +17,7 @@
 /src/wip
 /utils
 /src/utils
+/notebooks/wip/DRAFT
 
 # Python specific
 __pycache__/
